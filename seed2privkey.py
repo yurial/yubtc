@@ -8,5 +8,5 @@ while True:
     privkey = seed2privkey(seed)
     print('privkey: {}'.format(privkey2wif(privkey, False)))
     print('address: {}'.format(privkey2addr(privkey)))
-    if yesno('exit?'):
+    if yesno('exit? '):
         break
