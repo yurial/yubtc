@@ -4,8 +4,11 @@ import ecdsa
 import base58
 import hashlib
 
-
+SUFFIX_PRIVKEY_COMPRESSED = 0x01
 PREFIX_ADDRESS = 0x00
+PREFIX_PUBKEY_EVEN = 0x02
+PREFIX_PUBKEY_ODD = 0x03
+PREFIX_PUBKEY_FULL = 0x04
 PREFIX_PAY2SCRIPT = 0x05
 PREFIX_TESNETADDR = 0x6F
 PREFIX_PRIVKEY = 0x80
@@ -35,7 +38,7 @@ def base58CheckEncode(prefix, payload):
     s = bytes([prefix]) + payload
     checksum = hashlib.sha256(hashlib.sha256(s).digest()).digest()[0:4]
     result = s + checksum
-    return '1' * countLeadingZeroes(result) + str(base58.b58encode(result))
+    return b'1' * countLeadingZeroes(result) + base58.b58encode(result)
 
 def base58CheckDecode(prefix, payload):
     def countLeadingOnes(s):
@@ -62,13 +65,13 @@ def base58CheckDecode(prefix, payload):
 
 def privkey2wif(key, compressed=False):
     if compressed:
-        key += bytes([0x01]) # append 'compression' suffix. https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
-    return base58CheckEncode(0x80, key)
+        key += bytes([SUFFIX_PRIVKEY_COMPRESSED]) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
+    return base58CheckEncode(PREFIX_PRIVKEY, key)
 
 def wif2privkey(wif_key):
-    privkey = base58CheckDecode(0x80, wif_key)
-    if len(privkey) == 33 and privkey[-1] == 0x01:
-        return (privkey[:-1], True) # remove 'compression' suffix. https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
+    privkey = base58CheckDecode(PREFIX_PRIVKEY, wif_key)
+    if len(privkey) == 33 and privkey[-1] == SUFFIX_PRIVKEY_COMPRESSED:
+        return (privkey[:-1], True) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
     return (privkey, False)
 
 def privkey2pubkey(privkey):
@@ -77,16 +80,16 @@ def privkey2pubkey(privkey):
 
 def pubkey2wif(pubkey, compressed=True):
     if not compressed:
-        return b'\x04' + pubkey
+        return bytes([PREFIX_PUBKEY_FULL]) + pubkey
     x, y = pubkey[:32], pubkey[32:]
-    prefix = b'\x02' if (y[-1] % 2) == 0 else b'\x03'
-    return prefix + x
+    prefix = PREFIX_PUBKEY_EVEN if (y[-1] % 2) == 0 else PREFIX_PUBKEY_ODD
+    return bytes([prefix]) + x
 
 def pubkey2addr(pubkey):
     pubwif = pubkey2wif(pubkey, compressed=True)
     sha256 = hashlib.sha256(pubwif).digest()
     ripemd160 = hashlib.new('ripemd160', sha256).digest()
-    return base58CheckEncode(0x00, ripemd160)
+    return base58CheckEncode(PREFIX_ADDRESS, ripemd160)
 
 def key2addr(s):
     return pubkey2addr(privkey2pubkey(s))
