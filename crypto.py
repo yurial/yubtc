@@ -9,18 +9,28 @@ PREFIX_PRIVKEY = 0x80
 PREFIX_ENCPRIVKEY = 0x0142 # BIP-38
 PREFIX_EXTPUBCEY = 0x0488B21E # BIP-32
 
+if bytes == str:  # python2
+    str2bytes = lambda s: s
+    bytes2str = lambda b: b
+    str2list = lambda s: [ord(c) for c in s]
+else:  # python3
+    str2bytes = lambda s: s.encode('latin-1')
+    bytes2str = lambda b: ''.join(map(chr, b))
+    str2list = lambda s: [c for c in s]
+
 def seed2privkey(seed, nonce=0):
+    from hash import sha256, keccak256, blake256
     from struct import pack
     data = pack(">L", nonce) + str2bytes(seed)
-    privkey = sha256(keccak256(blake256(data)))
+    privkey = bytearray(sha256(keccak256(blake256(data))))
     """
     Clamping the lower bits ensures the key is a multiple of the cofactor. This is done to prevent small subgroup attacks.
-    Clamping the (second most) upper bit to one is done because certain implementations of the Montgomery Ladder don't correctly handle this bit being zero. I believe curve25519-donna is impacted.
+    Clamping the (second most) upper bit to one is done because certain implementations of the Montgomery Ladder don't correctly handle this bit being zero.
     """
-    privkey[0] &= 248
-    privkey[31] &= 127
-    privkey[31] += 64
-    return privkey
+    privkey[31] &= 248
+    privkey[0] &= 127
+    privkey[0] += 64
+    return bytes(privkey)
 
 def privkey2wif(key, compressed=False):
     from base58check import base58CheckEncode
