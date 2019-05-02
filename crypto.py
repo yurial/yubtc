@@ -32,13 +32,13 @@ def seed2privkey(seed, nonce=0):
     privkey[0] += 64
     return bytes(privkey)
 
-def privkey2wif(key, compressed=False):
+def privkey2privwif(key, compressed=False):
     from base58check import base58CheckEncode
     if compressed:
         key += bytes([SUFFIX_PRIVKEY_COMPRESSED]) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
     return base58CheckEncode(PREFIX_PRIVKEY, key)
 
-def wif2privkey(wif_key):
+def privwif2privkey(wif_key):
     from base58check import base58CheckDecode
     privkey = base58CheckDecode(PREFIX_PRIVKEY, wif_key)
     if len(privkey) == 33 and privkey[-1] == SUFFIX_PRIVKEY_COMPRESSED:
@@ -50,22 +50,22 @@ def privkey2pubkey(privkey):
     sk = ecdsa.SigningKey.from_string(privkey, curve=ecdsa.SECP256k1)
     return sk.verifying_key.to_string()
 
-def pubkey2wif(pubkey, compressed=True):
+def pubkey2pubwif(pubkey, compressed=True):
     if not compressed:
         return bytes([PREFIX_PUBKEY_FULL]) + pubkey
     x, y = pubkey[:32], pubkey[32:]
     prefix = PREFIX_PUBKEY_EVEN if (y[-1] % 2) == 0 else PREFIX_PUBKEY_ODD
     return bytes([prefix]) + x
 
-def pubkey2addr(pubkey):
+def pubkey2addr(pubkey, compressed=False):
     from base58check import base58CheckEncode
     from hash import sha256, ripemd160
-    pubwif = pubkey2wif(pubkey, compressed=True)
+    pubwif = pubkey2pubwif(pubkey, compressed)
     hash = ripemd160(sha256(pubwif))
     return base58CheckEncode(PREFIX_ADDRESS, hash)
 
-def privkey2addr(s):
-    return pubkey2addr(privkey2pubkey(s))
+def privkey2addr(privkey, compressed=False):
+    return pubkey2addr(privkey2pubkey(privkey), compressed)
 
 """
 >>> p = 115792089237316195423570985008687907853269984665640564039457584007908834671663
