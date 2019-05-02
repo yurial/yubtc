@@ -1,20 +1,14 @@
-#!/usr/bin/env python3
+import pytest
 
-from crypto import *
-
-seed = 'my little test seed'
-privkey = seed2privkey(seed)
-print(privkey.hex())
-
-#privkeystr = b'KxFC1jmwwCoACiCAWZ3eXa96mBM6tb3TYzGmf6YwgdGWZgawvrtJ' # 1J7mdg5rbQyUHENYdx39WVWK7fsLpEoXZy
-#privkey, compressed = wif2privkey(privkeystr)
-#print(privkey2wif(privkey, compressed))
-#import binascii
-#privkey = binascii.unhexlify('18e14a7b6a307f426a94f8114701e7c8e774e7f9a47e2c2035db29a206321725') # 1PMycacnJaSqwwJqjawXBErnLsZ7RkXUAs
-#pubkey = privkey2pubkey(privkey)
-#print(pubkey.hex())
-#pubwif = pubkey2wif(pubkey)
-#print(pubwif.hex())
-#print(key2addr(privkey))
-#print(privateKeyToWif(binascii.unhexlify('0a56184c7a383d8bcce0c78e6e7a4b4b161b2f80a126caa48bde823a4625521f')))
-#print(base58.b58decode(privkeystr).hex())
+@pytest.mark.parametrize(
+        'seed, privwif, address',
+        [
+            ('qwe', b'5JWqeLAMTwv5Lci8j3PgAvfTg4ysvADWzT9VcXsUkekozhfw14d', b'1As78U2NPZejfgaiENyfiiGmiRUqi7C6Am'),
+            ('12345', b'5JeWp8SHj8QQMtEAy1wnMbYHwXxNFgJLXuaiWEPTGsbKrAxmMJN', b'1NxpWQVjsHp4Zbp3miM4A8MTXvNSTjuLfL'),
+        ]
+    )
+def test(seed, privwif, address):
+    from crypto import seed2privkey, privkey2wif, privkey2addr
+    privkey = seed2privkey(seed)
+    assert privkey2wif(privkey, compressed=False) == privwif
+    assert privkey2addr(privkey) == address

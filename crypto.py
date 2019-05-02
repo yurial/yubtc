@@ -64,7 +64,7 @@ def pubkey2addr(pubkey):
     hash = ripemd160(sha256(pubwif))
     return base58CheckEncode(PREFIX_ADDRESS, hash)
 
-def key2addr(s):
+def privkey2addr(s):
     return pubkey2addr(privkey2pubkey(s))
 
 """
