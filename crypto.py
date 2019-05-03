@@ -18,19 +18,25 @@ else:  # python3
     bytes2str = lambda b: ''.join(map(chr, b))
     str2list = lambda s: [c for c in s]
 
-def seed2privkey(seed, nonce=0):
+def seed2bin(seed, nonce=0):
     from hash import sha256, keccak256, blake256
     from struct import pack
     data = pack(">L", nonce) + str2bytes(seed)
-    privkey = bytearray(sha256(keccak256(blake256(data))))
+    return sha256(keccak256(blake256(data)))
+
+def bin2privkey(data, nonce=0):
+    privkey = bytearray(data)
     """
     Clamping the lower bits ensures the key is a multiple of the cofactor. This is done to prevent small subgroup attacks.
     Clamping the (second most) upper bit to one is done because certain implementations of the Montgomery Ladder don't correctly handle this bit being zero.
     """
-    privkey[31] &= 248
-    privkey[0] &= 127
-    privkey[0] += 64
+    privkey[0] &= 248
+    privkey[31] &= 127
+    privkey[31] += 64
     return bytes(privkey)
+
+def seed2privkey(seed, nonce=0):
+    return bin2privkey(seed2bin(seed, nonce))
 
 def privkey2privwif(key, compressed=False):
     from base58check import base58CheckEncode
