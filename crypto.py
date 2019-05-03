@@ -38,7 +38,7 @@ def bin2privkey(data, nonce=0):
 def seed2privkey(seed, nonce=0):
     return bin2privkey(seed2bin(seed, nonce))
 
-def privkey2privwif(key, compressed=False):
+def privkey2privwif(key, compressed=True):
     from base58check import base58CheckEncode
     if compressed:
         key += bytes([SUFFIX_PRIVKEY_COMPRESSED]) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
@@ -63,14 +63,14 @@ def pubkey2pubwif(pubkey, compressed=True):
     prefix = PREFIX_PUBKEY_EVEN if (y[-1] % 2) == 0 else PREFIX_PUBKEY_ODD
     return bytes([prefix]) + x
 
-def pubkey2addr(pubkey, compressed=False):
+def pubkey2addr(pubkey, compressed=True):
     from base58check import base58CheckEncode
     from hash import sha256, ripemd160
     pubwif = pubkey2pubwif(pubkey, compressed)
     hash = ripemd160(sha256(pubwif))
     return base58CheckEncode(PREFIX_ADDRESS, hash)
 
-def privkey2addr(privkey, compressed=False):
+def privkey2addr(privkey, compressed=True):
     return pubkey2addr(privkey2pubkey(privkey), compressed)
 
 """
