@@ -38,15 +38,15 @@ def bin2privkey(data, nonce=0):
 def seed2privkey(seed, nonce=0):
     return bin2privkey(seed2bin(seed, nonce))
 
-def privkey2privwif(key, compressed=True):
+def privkey2privwif(privkey, compressed=True):
     from base58check import base58CheckEncode
     if compressed:
-        key += bytes([SUFFIX_PRIVKEY_COMPRESSED]) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
-    return base58CheckEncode(PREFIX_PRIVKEY, key)
+        privkey += bytes([SUFFIX_PRIVKEY_COMPRESSED]) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
+    return base58CheckEncode(PREFIX_PRIVKEY, privkey)
 
-def privwif2privkey(wif_key):
+def privwif2privkey(privwif):
     from base58check import base58CheckDecode
-    privkey = base58CheckDecode(PREFIX_PRIVKEY, wif_key)
+    privkey = base58CheckDecode(PREFIX_PRIVKEY, privwif)
     if len(privkey) == 33 and privkey[-1] == SUFFIX_PRIVKEY_COMPRESSED:
         return (privkey[:-1], True) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
     return (privkey, False)
