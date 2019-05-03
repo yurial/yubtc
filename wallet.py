@@ -1,4 +1,3 @@
-
 class Wallet(object):
     def __init__(self, *args, privkey=None, privwif=None, seed=None, compressed=True, nonce=0):
         from crypto import privwif2privkey, seed2privkey
@@ -22,3 +21,7 @@ class Wallet(object):
     def get_address(self, compressed=None):
         from crypto import privkey2addr
         return privkey2addr(privkey=self.privkey, compressed=self.get_compressed(compressed))
+
+    def get_unspent(self):
+        from misc import get_unspent
+        return get_unspent(self.get_address())

@@ -10,3 +10,9 @@ def yesno(question):
             return False
         else:
             print("Please respond with 'Yes' or 'No'\n")
+
+
+def get_unspent(address):
+    import requests
+    url = 'https://blockchain.info/unspent?active={address}'.format(address=address)
+    return requests.get(url).json()['unspent_outputs']
