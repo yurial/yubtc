@@ -1,3 +1,5 @@
+MINIMAL_FEE = 1000
+
 class Wallet(object):
     def __init__(self, *args, privkey=None, privwif=None, seed=None, compressed=True, nonce=0):
         from crypto import privwif2privkey, seed2privkey
@@ -18,10 +20,23 @@ class Wallet(object):
         from crypto import privkey2privwif
         return privkey2privwif(privkey=self.privkey, compressed=self.get_compressed(compressed))
 
-    def get_address(self, compressed=None):
+    def get_native_address(self, compressed=None):
         from crypto import privkey2addr
         return privkey2addr(privkey=self.privkey, compressed=self.get_compressed(compressed))
 
-    def get_unspent(self):
+    def get_unspent(self, confirmations=6):
         from misc import get_unspent
-        return get_unspent(self.get_address())
+        result = list()
+        for x in get_unspent(self.get_native_address()):
+            if x['confirmations'] >= confirmations:
+                result.append({'tx': x['tx_hash'], 'out_n': x['tx_output_n'], 'value': x['value']})
+        return result
+
+    def send(self, address, amount, feekb=MINIMAL_FEE, fee=None):
+        from base58check import base58CheckDecode
+        pubkey = base58CheckDecode(address)
+        print(pubkey)
+
+    def send2native(self, address, amount, feekb=MINIMAL_FEE, fee=None):
+        # DUP HASH160 PUSHDATA(20)[b278af2a89b9768a7964e934c608e56d7024fd70] EQUALVERIFY CHECKSIG
+        pass

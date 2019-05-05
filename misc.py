@@ -14,5 +14,5 @@ def yesno(question):
 
 def get_unspent(address):
     import requests
-    url = 'https://blockchain.info/unspent?active={address}'.format(address=address)
+    url = 'https://blockchain.info/unspent?active={address}'.format(address=address.decode('ascii'))
     return requests.get(url).json()['unspent_outputs']

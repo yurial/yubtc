@@ -3,11 +3,12 @@ PREFIX_ADDRESS = 0x00
 PREFIX_PUBKEY_EVEN = 0x02
 PREFIX_PUBKEY_ODD = 0x03
 PREFIX_PUBKEY_FULL = 0x04
-PREFIX_PAY2SCRIPT = 0x05
+PREFIX_P2SH = 0x05 # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch07.asciidoc#pay-to-script-hash-p2sh
 PREFIX_TESNETADDR = 0x6F
 PREFIX_PRIVKEY = 0x80
 PREFIX_ENCPRIVKEY = 0x0142 # BIP-38
-PREFIX_EXTPUBCEY = 0x0488B21E # BIP-32
+PREFIX_EXTPUBKEY = 0x0488B21E # BIP-32
+# TODO: SEGWIT https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch07.asciidoc#segregated-witness
 
 if bytes == str:  # python2
     str2bytes = lambda s: s
@@ -42,11 +43,15 @@ def privkey2privwif(privkey, compressed=True):
     from base58check import base58CheckEncode
     if compressed:
         privkey += bytes([SUFFIX_PRIVKEY_COMPRESSED]) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
-    return base58CheckEncode(PREFIX_PRIVKEY, privkey)
+    return base58CheckEncode(bytes([PREFIX_PRIVKEY]) + privkey)
 
 def privwif2privkey(privwif):
     from base58check import base58CheckDecode
-    privkey = base58CheckDecode(PREFIX_PRIVKEY, privwif)
+    privkey = base58CheckDecode(privwif)
+    if privkey[0] != PREFIX_PRIVKEY:
+        raise Exception('prefix missmatch')
+    else:
+        privkey = privkey[1:]
     if len(privkey) == 33 and privkey[-1] == SUFFIX_PRIVKEY_COMPRESSED:
         return (privkey[:-1], True) # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch04.asciidoc#comp_priv
     return (privkey, False)
@@ -68,7 +73,7 @@ def pubkey2addr(pubkey, compressed=True):
     from hash import sha256, ripemd160
     pubwif = pubkey2pubwif(pubkey, compressed)
     hash = ripemd160(sha256(pubwif))
-    return base58CheckEncode(PREFIX_ADDRESS, hash)
+    return base58CheckEncode(bytes([PREFIX_ADDRESS]) + hash)
 
 def privkey2addr(privkey, compressed=True):
     return pubkey2addr(privkey2pubkey(privkey), compressed)
