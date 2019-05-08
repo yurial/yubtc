@@ -1,10 +1,11 @@
 SUFFIX_PRIVKEY_COMPRESSED = 0x01
-PREFIX_ADDRESS = 0x00
+PREFIX_P2PKH = 0x00 # Publick Key Hash
 PREFIX_PUBKEY_EVEN = 0x02
 PREFIX_PUBKEY_ODD = 0x03
 PREFIX_PUBKEY_FULL = 0x04
 PREFIX_P2SH = 0x05 # https://github.com/bitcoinbook/bitcoinbook/blob/develop/ch07.asciidoc#pay-to-script-hash-p2sh
-PREFIX_TESNETADDR = 0x6F
+PREFIX_TESTNET_P2PKH = 0x6F
+PREFIX_TESTNEY_P2SH = 0xc4
 PREFIX_PRIVKEY = 0x80
 PREFIX_ENCPRIVKEY = 0x0142 # BIP-38
 PREFIX_EXTPUBKEY = 0x0488B21E # BIP-32
@@ -61,6 +62,16 @@ def privkey2pubkey(privkey):
     sk = ecdsa.SigningKey.from_string(privkey, curve=ecdsa.SECP256k1)
     return sk.verifying_key.to_string()
 
+def sign_hash(privkey, datahash):
+    import ecdsa
+    sk = ecdsa.SigningKey.from_string(privkey, curve=ecdsa.SECP256k1)
+    return sk.sign_digest(datahash, sigencode=ecdsa.util.sigencode_der_canonize)
+
+def sign_data(privkey, data):
+    from hash import sha256
+    datahash = sha256(sha256(data))
+    return sign_hash(privkey=privkey, datahash=datahash)
+
 def pubkey2pubwif(pubkey, compressed=True):
     if not compressed:
         return bytes([PREFIX_PUBKEY_FULL]) + pubkey
@@ -70,10 +81,9 @@ def pubkey2pubwif(pubkey, compressed=True):
 
 def pubkey2addr(pubkey, compressed=True):
     from base58check import base58CheckEncode
-    from hash import sha256, ripemd160
+    from hash import hash160
     pubwif = pubkey2pubwif(pubkey, compressed)
-    hash = ripemd160(sha256(pubwif))
-    return base58CheckEncode(bytes([PREFIX_ADDRESS]) + hash)
+    return base58CheckEncode(bytes([PREFIX_P2PKH]) + hash160(pubwif))
 
 def privkey2addr(privkey, compressed=True):
     return pubkey2addr(privkey2pubkey(privkey), compressed)

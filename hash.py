@@ -14,3 +14,6 @@ def ripemd160(data):
 def blake256(data):
     from pyblake2 import blake2b
     return blake2b(data, digest_size=32).digest()
+
+def hash160(data):
+    return ripemd160(sha256(data))
