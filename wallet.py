@@ -1,3 +1,4 @@
+from decimal import Decimal
 MINIMAL_FEE = 1000
 
 class Wallet(object):
@@ -20,14 +21,14 @@ class Wallet(object):
         from crypto import privkey2privwif
         return privkey2privwif(privkey=self.privkey, compressed=self.get_compressed(compressed))
 
-    def get_p2pkh(self, compressed=None):
+    def get_p2pkh_address(self, compressed=None):
         from crypto import privkey2addr
         return privkey2addr(privkey=self.privkey, compressed=self.get_compressed(compressed))
 
     def get_unspent(self, confirmations=6):
         from misc import get_unspent
         result = list()
-        for x in get_unspent(self.get_p2pkh()):
+        for x in get_unspent(self.get_p2pkh_address()):
             if x['confirmations'] >= confirmations:
                 result.append({'tx': x['tx_hash'], 'out_n': x['tx_output_n'], 'amount': x['value'], 'script': x['script']})
         return result
@@ -39,8 +40,7 @@ class Wallet(object):
             in_amount += tx['amount']
         return satoshi2btc(in_amount)
 
-    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=0, confirmations=6):
-        from decimal import Decimal
+    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
         from base58check import base58CheckDecode
@@ -49,8 +49,11 @@ class Wallet(object):
             if not isinstance(amount, Decimal):
                 raise Exception('amount should be a instance of Decimal type')
             amount = btc2satoshi(amount)
+        if not isinstance(fee, Decimal):
+            raise Exception('fee should be a instance of Decimal type')
+        fee = btc2satoshi(fee)
         if dst is None:
-            dst = self.get_native_address()
+            dst = self.get_p2pkh_address()
         data = base58CheckDecode(dst)
         prefix = data[0]
         dsthash = data[1:]
@@ -61,7 +64,7 @@ class Wallet(object):
         amount = satoshi2btc(amount)
         fee = satoshi2btc(fee)
         rawtx = tx.serialize()
-        if yesno('send {} BTC to {} (cacshback={}, fee={}, txsize={})? '.format(amount, dst, cashback, fee, len(rawtx))):
+        if yesno('send {:0.08f} BTC to {} (cacshback={:0.08f}, fee={:0.08f}, txsize={})? '.format(amount, dst, cashback, fee, len(rawtx))):
             print('id: {}'.format(tx.id().hex()))
             sendTx(rawtx)
 
