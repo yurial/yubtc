@@ -37,5 +37,10 @@ def btc2satoshi(btc):
 
 def get_unspent(address):
     import requests
-    url = 'https://blockchain.info/unspent?active={address}'.format(address=address.decode('ascii'))
-    return requests.get(url).json()['unspent_outputs']
+    from json.decoder import JSONDecodeError
+    try:
+        url = 'https://blockchain.info/unspent?active={address}'.format(address=address.decode('ascii'))
+        return requests.get(url).json()['unspent_outputs']
+    except JSONDecodeError:
+        pass
+    raise Exception('No funds available.')
