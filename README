@@ -20,4 +20,6 @@ seed:
 14bUA6ioEkUVCx8cU2zvjpK4KBVHxvEnt3: 0.99998552 BTC
 
 $ ./yubtc.py send -c 0 -f 0.00001234 14bUA6ioEkUVCx8cU2zvjpK4KBVHxvEnt3 ALL
+seed:
+Address: 14bUA6ioEkUVCx8cU2zvjpK4KBVHxvEnt3
 send 0.99997318 BTC to 14bUA6ioEkUVCx8cU2zvjpK4KBVHxvEnt3 (cacshback=0.00000000, fee=0.00001234, txsize=192)? n
