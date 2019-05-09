@@ -15,6 +15,11 @@ $ ./yubtc.py newseed
 place fabric recall try between menu brush there around oil wing busy summer brush record
 Address: 14bUA6ioEkUVCx8cU2zvjpK4KBVHxvEnt3
 
+$ ./yubtc.py dumpprivkey
+seed:
+Address: 14bUA6ioEkUVCx8cU2zvjpK4KBVHxvEnt3
+L25VQR3RxMNhAVgehEqGjMWXvNHDc4bdmPraiwoEoNQr4UVviz2n
+
 $ ./yubtc.py balance
 seed:
 14bUA6ioEkUVCx8cU2zvjpK4KBVHxvEnt3: 0.99998552 BTC
