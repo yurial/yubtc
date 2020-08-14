@@ -40,7 +40,7 @@ class Wallet(object):
             in_amount += tx['amount']
         return satoshi2btc(in_amount)
 
-    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6):
+    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6, dump=True):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
         from base58check import base58CheckDecode
@@ -66,7 +66,10 @@ class Wallet(object):
         rawtx = tx.serialize()
         if yesno('send {:0.08f} BTC to {} (cacshback={:0.08f}, fee={:0.08f}, txsize={})? '.format(amount, dst, cashback, fee, len(rawtx))):
             print('id: {}'.format(tx.id().hex()))
-            sendTx(rawtx)
+            if dump:
+                print(rawtx)
+            else:
+                sendTx(rawtx)
 
     def _make_vin(self, pubhash, unspent):
         from transaction import script2pkh, CIn
