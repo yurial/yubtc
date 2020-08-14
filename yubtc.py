@@ -38,13 +38,14 @@ def balance(confirmations):
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
 @click.option('-f', '--fee', help='Set transaction fee. Value in decimal.', default=Decimal(0), required=False, nargs=1, type=Decimal)
 @click.option('-k', '--feekb', help='Set fee per kilobyte (1000 bytes). Value in satoshi.', default=1000, required=False, nargs=1, type=int)
+@click.option('--dump', help='Don\'t send transaction to network, just print to console.', default=False, is_flag=True)
 @click.argument('address', type=str)
 @click.argument('amount', type=str)
-def send(confirmations, fee, feekb, address, amount):
+def send(confirmations, fee, feekb, address, amount, dump):
     amount = None if amount == 'ALL' else Decimal(amount)
     wallet = Wallet(seed=get_seed())
     print('Address: {address}'.format(address=wallet.get_p2pkh_address().decode('ascii')))
-    wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations)
+    wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations, dump=dump)
 
 if __name__ == '__main__':
     cli()
