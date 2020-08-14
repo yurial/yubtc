@@ -34,7 +34,7 @@ def bin2privkey(data, nonce=0):
     """
     privkey[0] &= 248
     privkey[31] &= 127
-    privkey[31] += 64
+    privkey[31] |= 64
     return bytes(privkey)
 
 def seed2privkey(seed, nonce=0):
