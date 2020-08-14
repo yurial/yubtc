@@ -26,7 +26,7 @@ def seed2bin(seed, nonce=0):
     data = pack(">L", nonce) + str2bytes(seed)
     return sha256(keccak256(blake256(data)))
 
-def bin2privkey(data, nonce=0):
+def bin2privkey(data):
     privkey = bytearray(data)
     """
     Clamping the lower bits ensures the key is a multiple of the cofactor. This is done to prevent small subgroup attacks.
