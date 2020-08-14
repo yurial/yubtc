@@ -42,11 +42,11 @@ class CIn(object):
 
     def serialize(self):
         """
-        32 bytes    Transaction Hash                Pointer to the transaction containing the UTXO to be spent
-        4 bytes     Output Index                    The index number of the UTXO to be spent; first one is 0
-        1–9 bytes   (VarInt) Unlocking-Script Size  Unlocking-Script length in bytes, to follow
-        Variable    Unlocking-Script                A script that fulfills the conditions of the UTXO locking script
-        4 bytes     Sequence Number                 Used for locktime or disabled (0xFFFFFFFF)
+        32  hash                char[32]    The hash of the referenced transaction.
+        4   index               uint32_t    The index of the specific output in the transaction. The first output is 0, etc.
+        1+  script length       var_int     The length of the signature script
+        ?   signature script    uchar[]     Computational Script for confirming transaction authorization
+        4   sequence            uint32_t    Transaction version as defined by the sender. Intended for "replacement" of transactions when information is updated before inclusion into a block.
         """
         from struct import pack
         result = self.txhash
@@ -67,9 +67,9 @@ class COut(object):
 
     def serialize(self):
         """
-        8 bytes (little-endian) Amount
-        1–9 bytes (VarInt) lock script size
-        Locking-Script
+        8   value               int64_t Transaction Value
+        1+  pk_script length    var_int Length of the pk_script
+        ?   pk_script           uchar[] Usually contains the public key as a Bitcoin script setting up conditions to claim this output.
         """
         from struct import pack
         result = pack(b"<Q", self.amount)
@@ -85,8 +85,18 @@ class CTransaction(object):
         self.locktime = locktime
 
     def serialize(self):
+        """
+        4       version         int32_t             Transaction data format version (note, this is signed)
+        0 or 2  flag            optional uint8_t[2] If present, always 0001, and indicates the presence of witness data
+        1+      tx_in count     var_int             Number of Transaction inputs (never zero)
+        41+     tx_in           tx_in[]             A list of 1 or more transaction inputs or sources for coins
+        1+      tx_out count    var_int             Number of Transaction outputs
+        9+      tx_out          tx_out[]            A list of 1 or more transaction outputs or destinations for coins
+        0+      tx_witnesses    tx_witness[]        A list of witnesses, one for each input; omitted if flag is omitted above
+        4       lock_time       uint32_t            The block number or timestamp at which this transaction is unlocked.
+        """
         from struct import pack
-        result = pack(b"<L", self.version)
+        result = pack(b"<l", self.version)
         result += toVarInt(len(self.vin))
         for i in self.vin:
             result += i.serialize()
