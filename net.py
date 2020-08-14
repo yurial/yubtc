@@ -33,11 +33,18 @@ def makeVersionMsg():
     return makeMessage(magic, b'version', payload)
 
 def sendTx(rawtxdata):
+    from time import sleep
     from socket import create_connection, getaddrinfo, socket, AF_UNSPEC, SOCK_STREAM
     host = "seed.bitcoinstats.com"
     service = 8333
+    print('connect to {}'.format(host))
     sock = create_connection((host, service))
+    print('send version')
     sock.send(makeVersionMsg())
-    sock.recv(1000) # receive version
-    sock.recv(1000) # receive verack
+    print('recv version')
+    sleep(0.1)  # TODO: read all bytes of answer
+    sock.recv(1000) # receive version and verack
+    print('send transaction to network')
     sock.send(makeTxMsg(rawtxdata))
+    socket.close()
+    print('done')
