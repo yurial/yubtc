@@ -67,7 +67,7 @@ class Wallet(object):
         if yesno('send {:0.08f} BTC to {} (cacshback={:0.08f}, fee={:0.08f}, txsize={})? '.format(amount, dst, cashback, fee, len(rawtx))):
             print('id: {}'.format(tx.id().hex()))
             if dump:
-                print(rawtx)
+                print(rawtx.hex())
             else:
                 sendTx(rawtx)
 
