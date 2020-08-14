@@ -198,3 +198,11 @@ def _generate_seed(count=15, allow_dups=True):
 def generate_seed(count=15, allow_dups=True):
     return ' '.join(_generate_seed(count, allow_dups))
 
+def get_seed():
+    from sys import stdin
+    if stdin.isatty():
+        from getpass import getpass
+        return getpass('seed: ')
+    else:
+        return stdin.readline().rstrip()
+
