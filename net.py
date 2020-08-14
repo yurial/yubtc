@@ -40,14 +40,14 @@ def makeVersionMsg():
     ?   user_agent      var_str     User Agent (0x00 if string is 0 bytes long)
     4   start_height    int32_t     The last block received by the emitting node
     Fields below require version ≥ 70001
-    1   relay   bool    Whether the remote peer should announce relayed transactions or not, see BIP 0037
+    1   relay           bool    Whether the remote peer should announce relayed transactions or not, see BIP 0037
     """
     from time import time
     from struct import pack
     from socket import inet_aton 
     from random import getrandbits
     from misc import varstr
-    version = 60002
+    version = 70015
     services = 1
     timestamp = int(time())
     addr_me = netaddr(services, inet_aton("127.0.0.1"), 8333)
@@ -55,8 +55,9 @@ def makeVersionMsg():
     nonce = getrandbits(64)
     user_agent = varstr(b'yubtc')
     start_height = 0
+    relay = 0
 
-    payload = pack('<lQq26s26sQ', version, services, timestamp, addr_me, addr_you, nonce) + user_agent + pack('<l', start_height)
+    payload = pack('<lQq26s26sQ', version, services, timestamp, addr_me, addr_you, nonce) + user_agent + pack('<lB', start_height, relay)
     return makeMessage(magic, b'version', payload)
 
 def sendTx(rawtxdata):
@@ -73,5 +74,6 @@ def sendTx(rawtxdata):
     sock.recv(1000) # receive version and verack
     print('send transaction to network')
     sock.send(makeTxMsg(rawtxdata))
+    sleep(1)
     sock.close()
     print('done')
