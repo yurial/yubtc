@@ -89,7 +89,7 @@ class Wallet(object):
         from transaction import COut
         from script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
         dst_lock_script = CScript([OP_DUP, OP_HASH160, dsthash, OP_EQUALVERIFY, OP_CHECKSIG])
-        if amount is None:
+        if amount is None or (amount+fee == in_amount):
             amount = in_amount - fee
             return [COut(amount=amount, script=dst_lock_script)], 0, amount
         else:
@@ -106,21 +106,17 @@ class Wallet(object):
         pubhash = hash160(pubwif)
         unspent = self.get_unspent(confirmations=confirmations)
         vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent)
-        vout, _cashback, _amount = self._make_vout(pubhash=pubhash, dsthash=dsthash, in_amount=in_amount, amount=amount, fee=fee)
         _fee = fee
-        tx = CTransaction(vin=vin, vout=vout)
-        tx = tx.sign(privkey=self.privkey, pubwif=pubwif)
         while True:
-            if fee == 0:
-                txsize = len(tx.serialize())
-                newfee = int(txsize * feekb / 1000)
-                if _fee == newfee:
-                    break;
-            else:
-                break
-            _fee = newfee
             vout, _cashback, _amount = self._make_vout(pubhash=pubhash, dsthash=dsthash, in_amount=in_amount, amount=amount, fee=_fee)
             tx = CTransaction(vin=vin, vout=vout)
-            tx = tx.sign(privkey=self.privkey, pubwif=pubwif)
+            stx = tx.sign(privkey=self.privkey, pubwif=pubwif)
+            if fee != 0:
+                break
+            txsize = len(stx.serialize())
+            newfee = int(txsize * feekb / 1000)
+            if _fee == newfee:
+                break;
+            _fee = newfee
 
-        return tx, _cashback, _amount, _fee
+        return stx, _cashback, _amount, _fee

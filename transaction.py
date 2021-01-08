@@ -112,12 +112,17 @@ class CTransaction(object):
         from script import CScript
         from struct import pack
         tx = deepcopy(self)
+        scripts = list()
         SIGHASH_ALL = 0x01
-        sigdata = tx.serialize() + pack(b'<L', SIGHASH_ALL)
-        signature = sign_data(privkey=privkey, data=sigdata)+ pack(b'<B', SIGHASH_ALL)
-        script = CScript([signature, pubwif])
         for i in range(len(tx.vin)):
-            tx.vin[i].script = script
+            for z in range(len(tx.vin)):
+                tx.vin[z].script = b''
+            tx.vin[i] = deepcopy(self.vin[i])
+            sigdata = tx.serialize() + pack(b'<L', SIGHASH_ALL)
+            signature = sign_data(privkey=privkey, data=sigdata)+ pack(b'<B', SIGHASH_ALL)
+            scripts.append(CScript([signature, pubwif]))
+        for i in range(len(tx.vin)):
+            tx.vin[i].script = scripts[i]
         return tx
 
     def id(self):
