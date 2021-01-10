@@ -3,6 +3,7 @@ import click
 from decimal import Decimal
 from wallet import Wallet
 from seed import generate_seed, get_seed
+MINIMAL_FEE = 1000
 
 @click.group()
 def cli():
@@ -17,20 +18,20 @@ def newseed(n, unique):
     print('{seed}\r\nAddress: {address}'.format(seed=seed, address=wallet.get_p2pkh_address().decode('ascii')))
 
 @cli.command('address', help='Show native (P2PKH) address and exit.')
-@click.option('-n', '--nonce', help='Start nonce value', default=0, type=int)
+@click.option('-n', '--nonce', help='Start nonce value', default=0, nargs=1, type=int)
 def address(nonce):
     wallet = Wallet(seed=get_seed(), nonce=nonce)
     print(wallet.get_p2pkh_address().decode('ascii'))
 
 @cli.command('dumpprivkey', help='Show private key in WIF format and exit.')
-@click.option('-n', '--nonce', help='Start nonce value', default=0, type=int)
+@click.option('-n', '--nonce', help='Start nonce value', default=0, nargs=1, type=int)
 def dumpprivkey(nonce):
     wallet = Wallet(seed=get_seed(), nonce=nonce)
     print('Address: {address}'.format(address=wallet.get_p2pkh_address().decode('ascii')))
     print(wallet.get_privwif().decode('ascii'))
 
 @cli.command('balance', help='Show balance and exit.')
-@click.option('-n', '--nonce', help='Start nonce value', default=0, type=int)
+@click.option('-n', '--nonce', help='Start nonce value', default=0, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
 def balance(nonce, confirmations):
     wallet = Wallet(seed=get_seed(), nonce=nonce)
@@ -38,18 +39,19 @@ def balance(nonce, confirmations):
     pass
 
 @cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only native P2PKH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
-@click.option('-n', '--nonce', help='Start nonce value', default=0, type=int)
+@click.option('-n', '--nonce', help='Start nonce value', default=0, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
 @click.option('-f', '--fee', help='Set transaction fee. Value in decimal.', default=Decimal(0), required=False, nargs=1, type=Decimal)
-@click.option('-k', '--feekb', help='Set fee per kilobyte (1000 bytes). Value in satoshi.', default=1000, required=False, nargs=1, type=int)
+@click.option('-k', '--feekb', help='Set fee per kilobyte (1000 bytes). Value in satoshi.', default=MINIMAL_FEE, required=False, nargs=1, type=int)
+@click.option('-s', '--sequence', help='Set sequence value for each input.', default=0xffffffff, required=False, nargs=1, type=int)
 @click.option('--dump', help='Don\'t send transaction to network, just print to console.', default=False, is_flag=True)
 @click.argument('address', type=str)
 @click.argument('amount', type=str)
-def send(nonce, confirmations, fee, feekb, address, amount, dump):
+def send(nonce, confirmations, fee, feekb, address, amount, sequence, dump):
     amount = None if amount == 'ALL' else Decimal(amount)
     wallet = Wallet(seed=get_seed(), nonce=nonce)
     print('Address: {address}'.format(address=wallet.get_p2pkh_address().decode('ascii')))
-    wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations, dump=dump)
+    wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations, sequence=sequence, dump=dump)
 
 if __name__ == '__main__':
     cli()

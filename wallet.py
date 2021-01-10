@@ -1,5 +1,4 @@
 from decimal import Decimal
-MINIMAL_FEE = 1000
 
 class Wallet(object):
     def __init__(self, *args, privkey=None, privwif=None, seed=None, compressed=True, nonce=0):
@@ -40,7 +39,7 @@ class Wallet(object):
             in_amount += tx['amount']
         return satoshi2btc(in_amount)
 
-    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6, dump=True):
+    def send(self, dst, amount, feekb, fee, confirmations, sequence, dump):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
         from base58check import base58CheckDecode
@@ -59,7 +58,7 @@ class Wallet(object):
         dsthash = data[1:]
         if prefix != PREFIX_P2PKH:
             raise Exception('address now supported')
-        tx, cashback, amount, fee = self.make_transaction(dsthash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
+        tx, cashback, amount, fee = self.make_transaction(dsthash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations, sequence=sequence)
         cashback = satoshi2btc(cashback)
         amount = satoshi2btc(amount)
         fee = satoshi2btc(fee)
@@ -71,7 +70,7 @@ class Wallet(object):
             else:
                 sendTx(rawtx)
 
-    def _make_vin(self, pubhash, unspent):
+    def _make_vin(self, pubhash, unspent, sequence):
         from transaction import script2pkh, CIn
         vin = list()
         in_amount = 0
@@ -82,7 +81,7 @@ class Wallet(object):
             if required_hash != pubhash:
                 raise Exception('unknown pubkey required')
             txhash = bytes.fromhex(u['tx'])
-            vin.append(CIn(txhash=txhash, n=u['out_n'], script=tx_lock_script))
+            vin.append(CIn(txhash=txhash, n=u['out_n'], script=tx_lock_script, sequence=sequence))
         return vin, in_amount
 
     def _make_vout(self, pubhash, dsthash, in_amount, amount, fee):
@@ -97,7 +96,7 @@ class Wallet(object):
             cashback_lock_script = CScript([OP_DUP, OP_HASH160, pubhash, OP_EQUALVERIFY, OP_CHECKSIG])
             return [COut(amount=cashback, script=cashback_lock_script), COut(amount=amount, script=dst_lock_script)], cashback, amount
 
-    def make_transaction(self, dsthash, amount, feekb=MINIMAL_FEE, fee=0, confirmations=6):
+    def make_transaction(self, dsthash, amount, feekb, fee, confirmations, sequence):
         from hash import hash160
         from crypto import privkey2pubkey, pubkey2pubwif, sign_data
         from transaction import CTransaction
@@ -105,7 +104,7 @@ class Wallet(object):
         pubwif = pubkey2pubwif(pubkey)
         pubhash = hash160(pubwif)
         unspent = self.get_unspent(confirmations=confirmations)
-        vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent)
+        vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent, sequence=sequence)
         _fee = fee
         while True:
             vout, _cashback, _amount = self._make_vout(pubhash=pubhash, dsthash=dsthash, in_amount=in_amount, amount=amount, fee=_fee)

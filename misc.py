@@ -35,6 +35,9 @@ def btc2satoshi(btc):
     from decimal import Decimal
     return int(btc * Decimal((0, (1,), 8)))
 
+#https://blockchain.info/rawaddr/<addr>?limit=0
+#https://blockchain.info/balance?active=$address
+
 def get_unspent(address):
     import requests
     from json.decoder import JSONDecodeError
