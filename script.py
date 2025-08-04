@@ -105,6 +105,7 @@ for n in range(0xff+1):
 # push value
 OP_0 = CScriptOp(0x00)
 OP_FALSE = OP_0
+OP_PUSHBYTES_20 = CScriptOp(0x14)
 OP_PUSHDATA1 = CScriptOp(0x4c)
 OP_PUSHDATA2 = CScriptOp(0x4d)
 OP_PUSHDATA4 = CScriptOp(0x4e)
