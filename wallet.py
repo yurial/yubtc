@@ -33,13 +33,6 @@ class Wallet(object):
                 result.append({'tx': x['tx_hash'], 'out_n': x['tx_output_n'], 'amount': x['value'], 'script': x['script']})
         return result
 
-    def get_balance(self, confirmations=6):
-        from misc import satoshi2btc
-        in_amount = 0
-        for tx in self.get_unspent(confirmations=confirmations):
-            in_amount += tx['amount']
-        return satoshi2btc(in_amount)
-
     def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6, dump=True):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx

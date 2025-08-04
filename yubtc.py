@@ -32,10 +32,24 @@ def dumpprivkey(nonce):
 @cli.command('balance', help='Show balance and exit.')
 @click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
-def balance(nonce, confirmations):
+@click.option('-v', '--verbose', help='Print verbosity', default=False, required=False, is_flag=True)
+def balance(nonce, confirmations, verbose):
+    from misc import satoshi2btc
     wallet = Wallet(seed=get_seed(), nonce=nonce)
-    print('{nonce}# {address}: {amount:0.08f} BTC'.format(nonce=nonce, address=wallet.get_p2pkh_address().decode('ascii'), amount=wallet.get_balance(confirmations=confirmations)))
-    pass
+    txs = wallet.get_unspent(confirmations=confirmations)
+    in_amount = 0
+    for tx in txs:
+        in_amount += tx['amount']
+    address = wallet.get_p2pkh_address().decode('ascii')
+    amount = satoshi2btc(in_amount)
+    print(f'{nonce}# {address}: {amount:0.08f} BTC')
+    if verbose:
+        for tx in txs:
+            tx_id = tx['tx']
+            tx_out_n = tx['out_n']
+            vin = f'({tx_id}:{tx_out_n})'
+            amount = satoshi2btc(tx['amount'])
+            print(f'    {vin}: {amount}')
 
 @cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only native P2PKH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
 @click.option('--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
