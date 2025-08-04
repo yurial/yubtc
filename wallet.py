@@ -1,15 +1,23 @@
 from collections import namedtuple
 from decimal import Decimal
-MINIMAL_FEE = 1000
+MINIMAL_FEE = 2000
 
 
 class TPrivKey(object):
-    def __init__(self, *args, privkey=None):
+    def __init__(self, *args, privkey=None, seed=None, nonce=None):
+        from crypto import privwif2privkey, seed2privkey
         if args:
             raise Exception('only kwargs allowed')
-        if not privkey:
-            raise Exception('privkey not set')
-        self.privkey = privkey
+        if privkey:
+            self.privkey = privkey
+        else:
+            if not seed:
+                raise Exception('seed not set')
+            if nonce is None:
+                raise Exception('nonce not set')
+            self.privkey = seed2privkey(seed=seed, nonce=nonce)
+        self.nonce = nonce
+        self._info = None
 
     def get_privwif(self, compressed=True):
         from crypto import privkey2privwif
@@ -19,10 +27,28 @@ class TPrivKey(object):
         from crypto import privkey2addr
         return privkey2addr(privkey=self.privkey, compressed=compressed)
 
+    def get_info(self):
+        from misc import get_address_info
+        if not self._info:
+            self._info = get_address_info(self.get_p2pkh_address())
+        return self._info
+
+    def is_unused(self):
+        total_received = self.get_info()['total_received']
+        return total_received == 0
+
+    def get_unspent(self, confirmations=6):
+        from misc import get_address_unspent
+        result = list()
+        for x in get_address_unspent(self.get_p2pkh_address()):
+            if x['confirmations'] >= confirmations:
+                result.append({'tx': x['tx_hash'], 'out_n': x['tx_output_n'], 'amount': x['value'], 'script': x['script']})
+        return result
+
+
 
 class Wallet(object):
-    def __init__(self, *args, privkey=None, privwif=None, seed=None, compressed=True, nonce=0):
-        from crypto import privwif2privkey, seed2privkey
+    def __init__(self, *args, privkey=None, privwif=None, seed=None, compressed=True, nonce=None, new_addresses=1):
         if args:
             raise Exception('only kwargs allowed')
         if privkey:
@@ -31,18 +57,19 @@ class Wallet(object):
             privkey, compressed = privwif2privkey(privwif)
             self.privkeys = [TPrivKey(privkey=privkey)]
         elif seed:
-            privkey = seed2privkey(seed=seed, nonce=nonce)
-            self.privkeys = [TPrivKey(privkey=privkey)]
+            self.privkeys = []
+            while True:
+                privkey = TPrivKey(seed=seed, nonce=nonce)
+                if privkey.is_unused():
+                    break
+                self.privkeys.append(privkey)
+                nonce = nonce + 1
+            for i in range(new_addresses):
+                privkey = TPrivKey(seed=seed, nonce=nonce)
+                self.privkeys.append(privkey)
+                nonce = nonce + 1
 
-    def get_unspent(self, confirmations=6):
-        from misc import get_unspent
-        result = list()
-        for x in get_unspent(self.privkeys[0].get_p2pkh_address()):
-            if x['confirmations'] >= confirmations:
-                result.append({'tx': x['tx_hash'], 'out_n': x['tx_output_n'], 'amount': x['value'], 'script': x['script']})
-        return result
-
-    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6, dump=True):
+    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6, send=False):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
         from base58check import base58CheckDecode
@@ -71,10 +98,10 @@ class Wallet(object):
         rawtx = tx.serialize()
         if yesno('send {:0.08f} BTC to {} (cacshback={:0.08f}, fee={:0.08f}, txsize={})? '.format(amount, dst, cashback, fee, len(rawtx))):
             print('id: {}'.format(tx.id().hex()))
-            if dump:
-                print(rawtx.hex())
-            else:
+            if send:
                 sendTx(rawtx)
+            else:
+                print(rawtx.hex())
 
     def _make_vin(self, pubhash, unspent):
         from transaction import script2pkh, CIn
@@ -117,16 +144,16 @@ class Wallet(object):
         from hash import hash160
         from crypto import privkey2pubkey, pubkey2pubwif, sign_data
         from transaction import CTransaction
-        pubkey = privkey2pubkey(self.adresses[0].privkey)
+        pubkey = privkey2pubkey(self.privkeys[0].privkey)
         pubwif = pubkey2pubwif(pubkey)
         pubhash = hash160(pubwif)
-        unspent = self.get_unspent(confirmations=confirmations)
+        unspent = self.privkeys[0].get_unspent(confirmations=confirmations)
         vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent)
         _fee = fee
         while True:
             vout, _cashback, _amount = self._make_p2pkh_vout(pubhash=pubhash, dsthash=dsthash, in_amount=in_amount, amount=amount, fee=_fee)
             tx = CTransaction(vin=vin, vout=vout)
-            stx = tx.sign(privkey=self.adresses[0].privkey, pubwif=pubwif)
+            stx = tx.sign(privkey=self.privkeys[0].privkey, pubwif=pubwif)
             if fee != 0:
                 break
             txsize = len(stx.serialize())
@@ -141,16 +168,16 @@ class Wallet(object):
         from hash import hash160
         from crypto import privkey2pubkey, pubkey2pubwif, sign_data
         from transaction import CTransaction
-        pubkey = privkey2pubkey(self.adresses[0].privkey)
+        pubkey = privkey2pubkey(self.privkeys[0].privkey)
         pubwif = pubkey2pubwif(pubkey)
         pubhash = hash160(pubwif)
-        unspent = self.get_unspent(confirmations=confirmations)
+        unspent = self.privkeys[0].get_unspent(confirmations=confirmations)
         vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent)
         _fee = fee
         while True:
             vout, _cashback, _amount = self._make_p2sh_vout(pubhash=pubhash, script_hash=script_hash, in_amount=in_amount, amount=amount, fee=_fee)
             tx = CTransaction(vin=vin, vout=vout)
-            stx = tx.sign(privkey=self.adresses[0].privkey, pubwif=pubwif)
+            stx = tx.sign(privkey=self.privkeys[0].privkey, pubwif=pubwif)
             if fee != 0:
                 break
             txsize = len(stx.serialize())

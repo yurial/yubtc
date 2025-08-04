@@ -35,12 +35,25 @@ def btc2satoshi(btc):
     from decimal import Decimal
     return int(btc * Decimal((0, (1,), 8)))
 
-def get_unspent(address):
+def get_address_unspent(address):
     import requests
     from json.decoder import JSONDecodeError
+    address = address.decode('ascii')
     try:
-        url = 'https://blockchain.info/unspent?active={address}'.format(address=address.decode('ascii'))
+        url = 'https://blockchain.info/unspent?active={address}'.format(address=address)
         return requests.get(url).json()['unspent_outputs']
     except JSONDecodeError:
         pass
+    raise Exception('No funds available.')
+
+def get_address_info(address):
+    import requests
+    from json.decoder import JSONDecodeError
+    address = address.decode('ascii')
+    try:
+        url = 'https://blockchain.info/balance?active={address}'.format(address=address)
+        response = requests.get(url)
+        return response.json()[address]
+    except JSONDecodeError:
+        return {'total_received': 0}
     raise Exception('No funds available.')

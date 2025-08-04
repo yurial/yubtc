@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 import click
+
 from decimal import Decimal
-from wallet import Wallet
+from wallet import Wallet, MINIMAL_FEE
 from seed import generate_seed, get_seed
 
 @click.group()
@@ -32,38 +33,40 @@ def dumpprivkey(nonce):
 @cli.command('balance', help='Show balance and exit.')
 @click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
+@click.option('--new', help='Count of new unused addresses', default=1, required=False, nargs=1, type=int)
 @click.option('-v', '--verbose', help='Print verbosity', default=False, required=False, is_flag=True)
-def balance(nonce, confirmations, verbose):
+def balance(nonce, confirmations, new, verbose):
     from misc import satoshi2btc
-    wallet = Wallet(seed=get_seed(), nonce=nonce)
-    txs = wallet.get_unspent(confirmations=confirmations)
-    in_amount = 0
-    for tx in txs:
-        in_amount += tx['amount']
-    address = wallet.privkeys[0].get_p2pkh_address().decode('ascii')
-    amount = satoshi2btc(in_amount)
-    print(f'{nonce}# {address}: {amount:0.08f} BTC')
-    if verbose:
+    wallet = Wallet(seed=get_seed(), nonce=nonce, new_addresses=new)
+    for privkey in wallet.privkeys:
+        txs = privkey.get_unspent(confirmations=confirmations)
+        in_amount = 0
         for tx in txs:
-            tx_id = tx['tx']
-            tx_out_n = tx['out_n']
-            vin = f'({tx_id}:{tx_out_n})'
-            amount = satoshi2btc(tx['amount'])
-            print(f'    {vin}: {amount}')
+            in_amount += tx['amount']
+        address = privkey.get_p2pkh_address().decode('ascii')
+        amount = satoshi2btc(in_amount)
+        print(f'{privkey.nonce}# {address}: {amount:0.08f} BTC')
+        if verbose:
+            for tx in txs:
+                tx_id = tx['tx']
+                tx_out_n = tx['out_n']
+                vin = f'({tx_id}:{tx_out_n})'
+                amount = satoshi2btc(tx['amount'])
+                print(f'    {vin}: {amount}')
 
 @cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only P2PKH or P2SH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
 @click.option('--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
 @click.option('-f', '--fee', help='Set transaction fee. Value in decimal.', default=Decimal(0), required=False, nargs=1, type=Decimal)
-@click.option('-k', '--feekb', help='Set fee per kilobyte (1000 bytes). Value in satoshi.', default=1000, required=False, nargs=1, type=int)
-@click.option('--dump', help='Don\'t send transaction to network, just print to console.', default=False, is_flag=True)
+@click.option('-k', '--feekb', help='Set fee per kilobyte (1000 bytes). Value in satoshi.', default=MINIMAL_FEE, required=False, nargs=1, type=int)
+@click.option('--send', help='Send transaction to network, just print to console.', default=False, is_flag=True)
 @click.argument('address', type=str)
 @click.argument('amount', type=str)
-def send(nonce, confirmations, fee, feekb, address, amount, dump):
+def send(nonce, confirmations, fee, feekb, address, amount, send):
     amount = None if amount == 'ALL' else Decimal(amount)
     wallet = Wallet(seed=get_seed(), nonce=nonce)
     print('Address: {address}'.format(address=wallet.privkeys[0].get_p2pkh_address().decode('ascii')))
-    wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations, dump=dump)
+    wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations, send=send)
 
 if __name__ == '__main__':
     cli()
