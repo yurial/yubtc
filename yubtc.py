@@ -37,6 +37,7 @@ def dumpprivkey(nonce):
 @click.option('-v', '--verbose', help='Print verbosity', default=False, required=False, is_flag=True)
 def balance(nonce, confirmations, new, verbose):
     from misc import satoshi2btc
+    total = 0
     wallet = Wallet(seed=get_seed(), nonce=nonce, new_addresses=new)
     for privkey in wallet.privkeys:
         txs = privkey.get_unspent(confirmations=confirmations)
@@ -45,6 +46,7 @@ def balance(nonce, confirmations, new, verbose):
             in_amount += tx['amount']
         address = privkey.get_p2pkh_address().decode('ascii')
         amount = satoshi2btc(in_amount)
+        total += amount
         print(f'{privkey.nonce}# {address}: {amount:0.08f} BTC')
         if verbose:
             for tx in txs:
@@ -53,6 +55,7 @@ def balance(nonce, confirmations, new, verbose):
                 vin = f'({tx_id}:{tx_out_n})'
                 amount = satoshi2btc(tx['amount'])
                 print(f'    {vin}: {amount}')
+    print(f'Total: {total}')
 
 @cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only P2PKH or P2SH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
 @click.option('--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)

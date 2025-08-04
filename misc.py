@@ -43,8 +43,8 @@ def get_address_unspent(address):
         url = 'https://blockchain.info/unspent?active={address}'.format(address=address)
         return requests.get(url).json()['unspent_outputs']
     except JSONDecodeError:
-        pass
-    raise Exception('No funds available.')
+        return []
+    raise Exception('Unknown error')
 
 def get_address_info(address):
     import requests
@@ -56,4 +56,4 @@ def get_address_info(address):
         return response.json()[address]
     except JSONDecodeError:
         return {'total_received': 0}
-    raise Exception('No funds available.')
+    raise Exception('Unknown error')
