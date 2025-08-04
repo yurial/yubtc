@@ -58,7 +58,7 @@ def balance(nonce, confirmations, new, verbose):
     print(f'Total: {total}')
 
 @cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only P2PKH or P2SH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
-@click.option('--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
+@click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
 @click.option('-f', '--fee', help='Set transaction fee. Value in decimal.', default=Decimal(0), required=False, nargs=1, type=Decimal)
 @click.option('-k', '--feekb', help='Set fee per kilobyte (1000 bytes). Value in satoshi.', default=MINIMAL_FEE, required=False, nargs=1, type=int)
