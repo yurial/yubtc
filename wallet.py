@@ -3,7 +3,7 @@ from decimal import Decimal
 MINIMAL_FEE = 1000
 
 
-class TAddress(object):
+class TPrivKey(object):
     def __init__(self, *args, privkey=None):
         if args:
             raise Exception('only kwargs allowed')
@@ -26,13 +26,13 @@ class Wallet(object):
         if args:
             raise Exception('only kwargs allowed')
         if privkey:
-            self.addresses = [TAddress(privkey=privkey)]
+            self.addresses = [TPrivKey(privkey=privkey)]
         elif privwif:
             privkey, compressed = privwif2privkey(privwif)
-            self.addresses = [TAddress(privkey=privkey)]
+            self.addresses = [TPrivKey(privkey=privkey)]
         elif seed:
             privkey = seed2privkey(seed=seed, nonce=nonce)
-            self.addresses = [TAddress(privkey=privkey)]
+            self.addresses = [TPrivKey(privkey=privkey)]
 
     def get_unspent(self, confirmations=6):
         from misc import get_unspent
