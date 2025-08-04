@@ -14,19 +14,19 @@ def cli():
 def newseed(n, unique):
     seed = generate_seed(count=n, allow_dups=not unique)
     wallet = Wallet(seed=seed)
-    print('{seed}\r\nAddress: {address}'.format(seed=seed, address=wallet.get_p2pkh_address().decode('ascii')))
+    print('{seed}\r\nAddress: {address}'.format(seed=seed, address=wallet.adresses[0].get_p2pkh_address().decode('ascii')))
 
 @cli.command('address', help='Show native (P2PKH) address and exit.')
 @click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 def address(nonce):
     wallet = Wallet(seed=get_seed(), nonce=nonce)
-    print(wallet.get_p2pkh_address().decode('ascii'))
+    print(wallet.adresses[0].get_p2pkh_address().decode('ascii'))
 
 @cli.command('dumpprivkey', help='Show private key in WIF format and exit.')
 @click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 def dumpprivkey(nonce):
     wallet = Wallet(seed=get_seed(), nonce=nonce)
-    print('Address: {address}'.format(address=wallet.get_p2pkh_address().decode('ascii')))
+    print('Address: {address}'.format(address=wallet.adresses[0].get_p2pkh_address().decode('ascii')))
     print(wallet.get_privwif().decode('ascii'))
 
 @cli.command('balance', help='Show balance and exit.')
@@ -40,7 +40,7 @@ def balance(nonce, confirmations, verbose):
     in_amount = 0
     for tx in txs:
         in_amount += tx['amount']
-    address = wallet.get_p2pkh_address().decode('ascii')
+    address = wallet.addresses[0].get_p2pkh_address().decode('ascii')
     amount = satoshi2btc(in_amount)
     print(f'{nonce}# {address}: {amount:0.08f} BTC')
     if verbose:
@@ -62,7 +62,7 @@ def balance(nonce, confirmations, verbose):
 def send(nonce, confirmations, fee, feekb, address, amount, dump):
     amount = None if amount == 'ALL' else Decimal(amount)
     wallet = Wallet(seed=get_seed(), nonce=nonce)
-    print('Address: {address}'.format(address=wallet.get_p2pkh_address().decode('ascii')))
+    print('Address: {address}'.format(address=wallet.addresses[0].get_p2pkh_address().decode('ascii')))
     wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations, dump=dump)
 
 if __name__ == '__main__':
