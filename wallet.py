@@ -26,18 +26,18 @@ class Wallet(object):
         if args:
             raise Exception('only kwargs allowed')
         if privkey:
-            self.addresses = [TPrivKey(privkey=privkey)]
+            self.privkeys = [TPrivKey(privkey=privkey)]
         elif privwif:
             privkey, compressed = privwif2privkey(privwif)
-            self.addresses = [TPrivKey(privkey=privkey)]
+            self.privkeys = [TPrivKey(privkey=privkey)]
         elif seed:
             privkey = seed2privkey(seed=seed, nonce=nonce)
-            self.addresses = [TPrivKey(privkey=privkey)]
+            self.privkeys = [TPrivKey(privkey=privkey)]
 
     def get_unspent(self, confirmations=6):
         from misc import get_unspent
         result = list()
-        for x in get_unspent(self.addresses[0].get_p2pkh_address()):
+        for x in get_unspent(self.privkeys[0].get_p2pkh_address()):
             if x['confirmations'] >= confirmations:
                 result.append({'tx': x['tx_hash'], 'out_n': x['tx_output_n'], 'amount': x['value'], 'script': x['script']})
         return result
@@ -55,7 +55,7 @@ class Wallet(object):
             raise Exception('fee should be a instance of Decimal type')
         fee = btc2satoshi(fee)
         if dst is None:
-            dst = self.addresses[0].get_p2pkh_address()
+            dst = self.privkeys[0].get_p2pkh_address()
         data = base58CheckDecode(dst)
         prefix = data[0]
         dsthash = data[1:]

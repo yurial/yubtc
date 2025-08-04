@@ -40,7 +40,7 @@ def balance(nonce, confirmations, verbose):
     in_amount = 0
     for tx in txs:
         in_amount += tx['amount']
-    address = wallet.addresses[0].get_p2pkh_address().decode('ascii')
+    address = wallet.privkeys[0].get_p2pkh_address().decode('ascii')
     amount = satoshi2btc(in_amount)
     print(f'{nonce}# {address}: {amount:0.08f} BTC')
     if verbose:
@@ -51,7 +51,7 @@ def balance(nonce, confirmations, verbose):
             amount = satoshi2btc(tx['amount'])
             print(f'    {vin}: {amount}')
 
-@cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only native P2PKH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
+@cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only P2PKH or P2SH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
 @click.option('--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
 @click.option('-f', '--fee', help='Set transaction fee. Value in decimal.', default=Decimal(0), required=False, nargs=1, type=Decimal)
@@ -62,7 +62,7 @@ def balance(nonce, confirmations, verbose):
 def send(nonce, confirmations, fee, feekb, address, amount, dump):
     amount = None if amount == 'ALL' else Decimal(amount)
     wallet = Wallet(seed=get_seed(), nonce=nonce)
-    print('Address: {address}'.format(address=wallet.addresses[0].get_p2pkh_address().decode('ascii')))
+    print('Address: {address}'.format(address=wallet.privkeys[0].get_p2pkh_address().decode('ascii')))
     wallet.send(dst=address, amount=amount, fee=fee, feekb=feekb, confirmations=confirmations, dump=dump)
 
 if __name__ == '__main__':
