@@ -1,9 +1,7 @@
 from collections import namedtuple
 from decimal import Decimal
 
-MINIMAL_FEE = 2000
-DEFAULT_CONFIRMATIONS=2
-
+from fwd import MINIMAL_FEE, DEFAULT_CONFIRMATIONS
 
 class TPrivKey(object):
     def __init__(self, *args, privkey=None, seed=None, nonce=None):
