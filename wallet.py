@@ -1,8 +1,8 @@
+from typing import Union
 from collections import namedtuple
-from decimal import Decimal
 
 from fwd import MINIMAL_FEE, DEFAULT_CONFIRMATIONS
-from fwd import TSatoshi, TBTC, TSeed
+from fwd import TSatoshi, TBTC, TSeed, TAddress
 
 class TPrivKey(object):
     def __init__(self, *args, privkey: bytes = None, seed: TSeed = None, nonce: int = None):
@@ -49,7 +49,7 @@ class TPrivKey(object):
 
 
 class Wallet(object):
-    def __init__(self, *args, privkey=None, privwif=None, seed=None, compressed=True, nonce=None, new_addresses=1):
+    def __init__(self, *args, privkey: bytes = None, privwif: str = None, seed: TSeed = None, compressed: bool = True, nonce: int = None, new_addresses: int = 1):
         if args:
             raise Exception('only kwargs allowed')
         if privkey:
@@ -70,20 +70,14 @@ class Wallet(object):
                 self.privkeys.append(privkey)
                 nonce = nonce + 1
 
-    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=DEFAULT_CONFIRMATIONS, send=False):
+    def send(self, dst: TAddress, amount: Union[TBTC, None], feekb: TSatoshi = MINIMAL_FEE, fee: TBTC = TBTC(0), confirmations: int = DEFAULT_CONFIRMATIONS, send: bool = False):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
         from base58check import base58CheckDecode
         from crypto import PREFIX_P2PKH, PREFIX_P2SH
         if amount is not None:
-            if not isinstance(amount, Decimal):
-                raise Exception('amount should be a instance of Decimal type')
             amount = btc2satoshi(amount)
-        if not isinstance(fee, Decimal):
-            raise Exception('fee should be a instance of Decimal type')
         fee = btc2satoshi(fee)
-        if dst is None:
-            dst = self.privkeys[0].get_p2pkh_address()
         data = base58CheckDecode(dst)
         prefix = data[0]
         dsthash = data[1:]

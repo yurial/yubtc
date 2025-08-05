@@ -1,6 +1,7 @@
 from decimal import Decimal
 
 TSeed = str
+TAddress = str
 TAmount = str
 TSatoshi = int
 TBTC = Decimal
