@@ -1,6 +1,8 @@
 from collections import namedtuple
 from decimal import Decimal
+
 MINIMAL_FEE = 2000
+DEFAULT_CONFIRMATIONS=2
 
 
 class TPrivKey(object):
@@ -69,7 +71,7 @@ class Wallet(object):
                 self.privkeys.append(privkey)
                 nonce = nonce + 1
 
-    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=6, send=False):
+    def send(self, dst, amount, feekb=MINIMAL_FEE, fee=Decimal(0), confirmations=DEFAULT_CONFIRMATIONS, send=False):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
         from base58check import base58CheckDecode

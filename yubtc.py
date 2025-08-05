@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import click
 
+from fwd import TSatoshi, TBTC
 from decimal import Decimal
 from wallet import Wallet, MINIMAL_FEE
 from seed import generate_seed, get_seed
@@ -45,7 +46,7 @@ def balance(nonce, confirmations, new, verbose):
         for tx in txs:
             in_amount += tx['amount']
         address = privkey.get_p2pkh_address().decode('ascii')
-        amount = satoshi2btc(in_amount)
+        amount: TBTC = satoshi2btc(in_amount)
         total += amount
         print(f'{privkey.nonce}# {address}: {amount:0.08f} BTC')
         if verbose:
