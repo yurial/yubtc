@@ -3,6 +3,7 @@ from collections import namedtuple
 
 from fwd import MINIMAL_FEE, DEFAULT_CONFIRMATIONS
 from fwd import TSatoshi, TBTC, TSeed, TAddress
+from misc import unpack_address
 
 class TPrivKey(object):
     def __init__(self, *args, privkey: bytes = None, seed: TSeed = None, nonce: int = None):
@@ -73,7 +74,6 @@ class Wallet(object):
     def send(self, *args, dst: TAddress = None, amount: TBTC = None, feekb: TSatoshi = None, fee: TBTC = None, confirmations: int = None, send: bool = None):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
-        from base58check import base58CheckDecode
         from crypto import PREFIX_P2PKH, PREFIX_P2SH
         if args:
             raise Exception('only kwargs allowed')
@@ -130,13 +130,11 @@ class Wallet(object):
         return self._make_vout(pubhash, in_amount, amount, fee, vout_script)
 
     def make_transaction(self, dst: TAddress, amount: TBTC, feekb: TBTC = None, fee: int = None, confirmations: int = None):
-        data = base58CheckDecode(dst)
-        prefix = data[0]
-        dsthash = data[1:]
+        prefix, dsthash = unpack_address(dst)
         if prefix == PREFIX_P2PKH:
             return self.make_p2pkh_transaction(dsthash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
         elif prefix == PREFIX_P2SH:
-            return self.make_p2sh_transaction(script_hash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
+            return self.make_p4sh_transaction(script_hash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
         else:
             raise Exception('address not supported')
 
