@@ -1,3 +1,5 @@
+from fwd import TSatoshi, TBTC, TAmount
+
 if str != bytes:
     raw_input = input
 
@@ -27,13 +29,11 @@ def yesno(question):
         else:
             print("Please respond with 'Yes' or 'No'\n")
 
-def satoshi2btc(satoshi):
-    from decimal import Decimal
-    return Decimal(satoshi) * Decimal((0, (1,), -8))
+def satoshi2btc(satoshi: TSatoshi) -> TBTC:
+    return TBTC(satoshi) * TBTC((0, (1,), -8))
 
-def btc2satoshi(btc):
-    from decimal import Decimal
-    return int(btc * Decimal((0, (1,), 8)))
+def btc2satoshi(btc: TBTC) -> TSatoshi:
+    return TSatoshi(btc * TBTC((0, (1,), 8)))
 
 def get_address_unspent(address):
     import requests
