@@ -37,7 +37,7 @@ def btc2satoshi(btc: TBTC) -> TSatoshi:
 
 def unpack_address(address: TAddress):
     from base58check import base58CheckDecode
-    data = base58CheckDecode(dst)
+    data = base58CheckDecode(address)
     prefix = data[0]
     dsthash = data[1:]
     return prefix, dsthash

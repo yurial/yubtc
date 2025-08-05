@@ -74,16 +74,15 @@ class Wallet(object):
     def send(self, *args, dst: TAddress = None, amount: TBTC = None, feekb: TSatoshi = None, fee: TBTC = None, confirmations: int = None, send: bool = None):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
-        from crypto import PREFIX_P2PKH, PREFIX_P2SH
         if args:
             raise Exception('only kwargs allowed')
         if amount is not None:
             amount = btc2satoshi(amount)
         fee = btc2satoshi(fee)
+        tx, cashback, amount, fee = self.make_transaction(dst=dst, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
         cashback = satoshi2btc(cashback)
         amount = satoshi2btc(amount)
         fee = satoshi2btc(fee)
-        tx, cashback, amount, fee = self.make_transaction(dst=dst, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
         rawtx = tx.serialize()
         if yesno('send {:0.08f} BTC to {} (cacshback={:0.08f}, fee={:0.08f}, txsize={})? '.format(amount, dst, cashback, fee, len(rawtx))):
             print('id: {}'.format(tx.id().hex()))
@@ -106,74 +105,41 @@ class Wallet(object):
             vin.append(CIn(txhash=txhash, n=u['out_n'], script=tx_lock_script))
         return vin, in_amount
 
-    def _make_vout(self, pubhash, in_amount, amount, fee, vout_script):
+    def _make_lock_script(self, address: TAddress):
+        from script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, OP_EQUAL
+        from crypto import PREFIX_P2PKH, PREFIX_P2SH
+        prefix, dsthash = unpack_address(address)
+        if prefix == PREFIX_P2PKH:
+            return CScript([OP_DUP, OP_HASH160, dsthash, OP_EQUALVERIFY, OP_CHECKSIG])
+        elif prefix == PREFIX_P2SH:
+            return CScript([OP_HASH160, script_hash, OP_EQUAL])
+        else:
+            raise Exception('address not supported')
+
+    def _make_vout(self, src, dst: TAddress, in_amount, amount, fee):
         from transaction import COut
-        from script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
+        vout_script = self._make_lock_script(dst)
         if amount is None or (amount+fee == in_amount):
             amount = in_amount - fee
             return [COut(amount=amount, script=vout_script)], 0, amount
         else:
             cashback = in_amount - amount - fee
-            cashback_lock_script = CScript([OP_DUP, OP_HASH160, pubhash, OP_EQUALVERIFY, OP_CHECKSIG])
+            cashback_lock_script = self._make_lock_script(src)
             return [COut(amount=cashback, script=cashback_lock_script), COut(amount=amount, script=vout_script)], cashback, amount
 
-    def _make_p2pkh_vout(self, pubhash, dsthash, in_amount, amount, fee):
-        from transaction import COut
-        from script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG
-        vout_script = CScript([OP_DUP, OP_HASH160, dsthash, OP_EQUALVERIFY, OP_CHECKSIG])
-        return self._make_vout(pubhash, in_amount, amount, fee, vout_script)
-
-    def _make_p2sh_vout(self, pubhash, script_hash, in_amount, amount, fee):
-        from transaction import COut
-        from script import CScript, OP_HASH160, OP_PUSHBYTES_20, OP_EQUAL
-        vout_script = CScript([OP_HASH160, script_hash, OP_EQUAL])
-        return self._make_vout(pubhash, in_amount, amount, fee, vout_script)
-
     def make_transaction(self, dst: TAddress, amount: TBTC, feekb: TBTC = None, fee: int = None, confirmations: int = None):
-        prefix, dsthash = unpack_address(dst)
-        if prefix == PREFIX_P2PKH:
-            return self.make_p2pkh_transaction(dsthash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
-        elif prefix == PREFIX_P2SH:
-            return self.make_p4sh_transaction(script_hash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
-        else:
-            raise Exception('address not supported')
-
-    def make_p2pkh_transaction(self, dsthash, amount, feekb=MINIMAL_FEE, fee=0, confirmations=6):
         from hash import hash160
-        from crypto import privkey2pubkey, pubkey2pubwif, sign_data
+        from crypto import privkey2pubkey, pubkey2pubwif, sign_data, pubkey2addr
         from transaction import CTransaction
         pubkey = privkey2pubkey(self.privkeys[0].privkey)
+        src = pubkey2addr(pubkey)
         pubwif = pubkey2pubwif(pubkey)
         pubhash = hash160(pubwif)
         unspent = self.privkeys[0].get_unspent(confirmations=confirmations)
         vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent)
         _fee = fee
         while True:
-            vout, _cashback, _amount = self._make_p2pkh_vout(pubhash=pubhash, dsthash=dsthash, in_amount=in_amount, amount=amount, fee=_fee)
-            tx = CTransaction(vin=vin, vout=vout)
-            stx = tx.sign(privkey=self.privkeys[0].privkey, pubwif=pubwif)
-            if fee != 0:
-                break
-            txsize = len(stx.serialize())
-            newfee = int(txsize * feekb / 1000)
-            if _fee == newfee:
-                break;
-            _fee = newfee
-
-        return stx, _cashback, _amount, _fee
-
-    def make_p2sh_transaction(self, script_hash, amount, feekb=MINIMAL_FEE, fee=0, confirmations=6):
-        from hash import hash160
-        from crypto import privkey2pubkey, pubkey2pubwif, sign_data
-        from transaction import CTransaction
-        pubkey = privkey2pubkey(self.privkeys[0].privkey)
-        pubwif = pubkey2pubwif(pubkey)
-        pubhash = hash160(pubwif)
-        unspent = self.privkeys[0].get_unspent(confirmations=confirmations)
-        vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent)
-        _fee = fee
-        while True:
-            vout, _cashback, _amount = self._make_p2sh_vout(pubhash=pubhash, script_hash=script_hash, in_amount=in_amount, amount=amount, fee=_fee)
+            vout, _cashback, _amount = self._make_vout(src, dst=dst, in_amount=in_amount, amount=amount, fee=_fee)
             tx = CTransaction(vin=vin, vout=vout)
             stx = tx.sign(privkey=self.privkeys[0].privkey, pubwif=pubwif)
             if fee != 0:
