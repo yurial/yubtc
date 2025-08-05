@@ -70,26 +70,20 @@ class Wallet(object):
                 self.privkeys.append(privkey)
                 nonce = nonce + 1
 
-    def send(self, dst: TAddress, amount: Union[TBTC, None], feekb: TSatoshi = MINIMAL_FEE, fee: TBTC = TBTC(0), confirmations: int = DEFAULT_CONFIRMATIONS, send: bool = False):
+    def send(self, *args, dst: TAddress = None, amount: TBTC = None, feekb: TSatoshi = None, fee: TBTC = None, confirmations: int = None, send: bool = None):
         from misc import yesno, satoshi2btc, btc2satoshi
         from net import sendTx
         from base58check import base58CheckDecode
         from crypto import PREFIX_P2PKH, PREFIX_P2SH
+        if args:
+            raise Exception('only kwargs allowed')
         if amount is not None:
             amount = btc2satoshi(amount)
         fee = btc2satoshi(fee)
-        data = base58CheckDecode(dst)
-        prefix = data[0]
-        dsthash = data[1:]
-        if prefix == PREFIX_P2PKH:
-            tx, cashback, amount, fee = self.make_p2pkh_transaction(dsthash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
-        elif prefix == PREFIX_P2SH:
-            tx, cashback, amount, fee = self.make_p2sh_transaction(script_hash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
-        else:
-            raise Exception('address not supported')
         cashback = satoshi2btc(cashback)
         amount = satoshi2btc(amount)
         fee = satoshi2btc(fee)
+        tx, cashback, amount, fee = self.make_transaction(dst=dst, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
         rawtx = tx.serialize()
         if yesno('send {:0.08f} BTC to {} (cacshback={:0.08f}, fee={:0.08f}, txsize={})? '.format(amount, dst, cashback, fee, len(rawtx))):
             print('id: {}'.format(tx.id().hex()))
@@ -134,6 +128,17 @@ class Wallet(object):
         from script import CScript, OP_HASH160, OP_PUSHBYTES_20, OP_EQUAL
         vout_script = CScript([OP_HASH160, script_hash, OP_EQUAL])
         return self._make_vout(pubhash, in_amount, amount, fee, vout_script)
+
+    def make_transaction(self, dst: TAddress, amount: TBTC, feekb: TBTC = None, fee: int = None, confirmations: int = None):
+        data = base58CheckDecode(dst)
+        prefix = data[0]
+        dsthash = data[1:]
+        if prefix == PREFIX_P2PKH:
+            return self.make_p2pkh_transaction(dsthash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
+        elif prefix == PREFIX_P2SH:
+            return self.make_p2sh_transaction(script_hash=dsthash, amount=amount, feekb=feekb, fee=fee, confirmations=confirmations)
+        else:
+            raise Exception('address not supported')
 
     def make_p2pkh_transaction(self, dsthash, amount, feekb=MINIMAL_FEE, fee=0, confirmations=6):
         from hash import hash160
