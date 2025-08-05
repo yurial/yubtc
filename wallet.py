@@ -116,7 +116,7 @@ class Wallet(object):
         else:
             raise Exception('address not supported')
 
-    def _make_vout(self, src, dst: TAddress, in_amount, amount, fee):
+    def _make_vout(self, src: TAddress, dst: TAddress, in_amount: TSatoshi, amount: TSatoshi, fee: TSatoshi):
         from transaction import COut
         vout_script = self._make_lock_script(dst)
         if amount is None or (amount+fee == in_amount):
@@ -127,7 +127,7 @@ class Wallet(object):
             cashback_lock_script = self._make_lock_script(src)
             return [COut(amount=cashback, script=cashback_lock_script), COut(amount=amount, script=vout_script)], cashback, amount
 
-    def make_transaction(self, dst: TAddress, amount: TBTC, feekb: TBTC = None, fee: int = None, confirmations: int = None):
+    def make_transaction(self, dst: TAddress, amount: TBTC, feekb: TBTC = None, fee: TSatoshi = None, confirmations: int = None):
         from hash import hash160
         from crypto import privkey2pubkey, pubkey2pubwif, sign_data, pubkey2addr
         from transaction import CTransaction
@@ -142,7 +142,7 @@ class Wallet(object):
             vout, _cashback, _amount = self._make_vout(src, dst=dst, in_amount=in_amount, amount=amount, fee=_fee)
             tx = CTransaction(vin=vin, vout=vout)
             stx = tx.sign(privkey=self.privkeys[0].privkey, pubwif=pubwif)
-            if fee != 0:
+            if fee:
                 break
             txsize = len(stx.serialize())
             newfee = int(txsize * feekb / 1000)
