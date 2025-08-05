@@ -2,9 +2,10 @@ from collections import namedtuple
 from decimal import Decimal
 
 from fwd import MINIMAL_FEE, DEFAULT_CONFIRMATIONS
+from fwd import TSatoshi, TBTC, TSeed
 
 class TPrivKey(object):
-    def __init__(self, *args, privkey=None, seed=None, nonce=None):
+    def __init__(self, *args, privkey: bytes = None, seed: TSeed = None, nonce: int = None):
         from crypto import privwif2privkey, seed2privkey
         if args:
             raise Exception('only kwargs allowed')
@@ -19,11 +20,11 @@ class TPrivKey(object):
         self.nonce = nonce
         self._info = None
 
-    def get_privwif(self, compressed=True):
+    def get_privwif(self, compressed: bool = True):
         from crypto import privkey2privwif
         return privkey2privwif(privkey=self.privkey, compressed=compressed)
 
-    def get_p2pkh_address(self, compressed=True):
+    def get_p2pkh_address(self, compressed: bool = True):
         from crypto import privkey2addr
         return privkey2addr(privkey=self.privkey, compressed=compressed)
 
@@ -37,7 +38,7 @@ class TPrivKey(object):
         total_received = self.get_info()['total_received']
         return total_received == 0
 
-    def get_unspent(self, confirmations=6):
+    def get_unspent(self, confirmations: int = DEFAULT_CONFIRMATIONS):
         from misc import get_address_unspent
         result = list()
         for x in get_address_unspent(self.get_p2pkh_address()):

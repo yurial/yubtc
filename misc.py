@@ -1,4 +1,4 @@
-from fwd import TSatoshi, TBTC, TAmount
+from fwd import TSatoshi, TBTC
 
 if str != bytes:
     raw_input = input
