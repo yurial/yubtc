@@ -1,3 +1,5 @@
+from fwd import TAddress, TSatoshi, TBTC
+
 SUFFIX_PRIVKEY_COMPRESSED = 0x01
 PREFIX_P2PKH = 0x00 # Publick Key Hash
 PREFIX_PUBKEY_EVEN = 0x02
@@ -94,3 +96,26 @@ def privkey2addr(privkey, compressed=True):
 >>> y = 32670510020758816978083085130507043184471273380659243275938904335757337482424
 >>> (x ** 3 + 7) % p == y**2 % p
 """
+
+def make_lock_script(address: TAddress):
+    from script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, OP_EQUAL
+    from crypto import PREFIX_P2PKH, PREFIX_P2SH
+    from misc import unpack_address
+    prefix, dsthash = unpack_address(address)
+    if prefix == PREFIX_P2PKH:
+        return CScript([OP_DUP, OP_HASH160, dsthash, OP_EQUALVERIFY, OP_CHECKSIG])
+    elif prefix == PREFIX_P2SH:
+        return CScript([OP_HASH160, script_hash, OP_EQUAL])
+    else:
+        raise Exception('address not supported')
+
+def make_vout(src: TAddress, dst: TAddress, in_amount: TSatoshi, amount: TSatoshi, fee: TSatoshi):
+    from transaction import COut
+    vout_script = make_lock_script(dst)
+    if amount is None or (amount+fee == in_amount):
+        amount = in_amount - fee
+        return [COut(amount=amount, script=vout_script)], 0, amount
+    else:
+        cashback = in_amount - amount - fee
+        cashback_lock_script = make_lock_script(src)
+        return [COut(amount=cashback, script=cashback_lock_script), COut(amount=amount, script=vout_script)], cashback, amount

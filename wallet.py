@@ -3,7 +3,6 @@ from collections import namedtuple
 
 from fwd import MINIMAL_FEE, DEFAULT_CONFIRMATIONS
 from fwd import TSatoshi, TBTC, TSeed, TAddress
-from misc import unpack_address
 
 class TPrivKey(object):
     def __init__(self, *args, privkey: bytes = None, seed: TSeed = None, nonce: int = None):
@@ -105,31 +104,9 @@ class Wallet(object):
             vin.append(CIn(txhash=txhash, n=u['out_n'], script=tx_lock_script))
         return vin, in_amount
 
-    def _make_lock_script(self, address: TAddress):
-        from script import CScript, OP_DUP, OP_HASH160, OP_EQUALVERIFY, OP_CHECKSIG, OP_EQUAL
-        from crypto import PREFIX_P2PKH, PREFIX_P2SH
-        prefix, dsthash = unpack_address(address)
-        if prefix == PREFIX_P2PKH:
-            return CScript([OP_DUP, OP_HASH160, dsthash, OP_EQUALVERIFY, OP_CHECKSIG])
-        elif prefix == PREFIX_P2SH:
-            return CScript([OP_HASH160, script_hash, OP_EQUAL])
-        else:
-            raise Exception('address not supported')
-
-    def _make_vout(self, src: TAddress, dst: TAddress, in_amount: TSatoshi, amount: TSatoshi, fee: TSatoshi):
-        from transaction import COut
-        vout_script = self._make_lock_script(dst)
-        if amount is None or (amount+fee == in_amount):
-            amount = in_amount - fee
-            return [COut(amount=amount, script=vout_script)], 0, amount
-        else:
-            cashback = in_amount - amount - fee
-            cashback_lock_script = self._make_lock_script(src)
-            return [COut(amount=cashback, script=cashback_lock_script), COut(amount=amount, script=vout_script)], cashback, amount
-
     def make_transaction(self, dst: TAddress, amount: TBTC, feekb: TBTC = None, fee: TSatoshi = None, confirmations: int = None):
         from hash import hash160
-        from crypto import privkey2pubkey, pubkey2pubwif, sign_data, pubkey2addr
+        from crypto import privkey2pubkey, pubkey2pubwif, sign_data, pubkey2addr, make_vout
         from transaction import CTransaction
         pubkey = privkey2pubkey(self.privkeys[0].privkey)
         src = pubkey2addr(pubkey)
@@ -139,7 +116,7 @@ class Wallet(object):
         vin, in_amount = self._make_vin(pubhash=pubhash, unspent=unspent)
         _fee = fee
         while True:
-            vout, _cashback, _amount = self._make_vout(src, dst=dst, in_amount=in_amount, amount=amount, fee=_fee)
+            vout, _cashback, _amount = make_vout(src, dst=dst, in_amount=in_amount, amount=amount, fee=_fee)
             tx = CTransaction(vin=vin, vout=vout)
             stx = tx.sign(privkey=self.privkeys[0].privkey, pubwif=pubwif)
             if fee:
