@@ -2,8 +2,7 @@
 import click
 
 from fwd import MINIMAL_FEE, DEFAULT_CONFIRMATIONS
-from fwd import TSatoshi, TBTC
-from decimal import Decimal
+from fwd import TSatoshi, TBTC, TAmount
 from wallet import Wallet, MINIMAL_FEE
 from seed import generate_seed, get_seed
 
@@ -57,7 +56,7 @@ def balance(nonce: int, confirmations: int, new: int, verbose: bool):
                 vin = f'({tx_id}:{tx_out_n})'
                 amount = satoshi2btc(tx['amount'])
                 print(f'    {vin}: {amount}')
-    print(f'Total: {total}')
+    print(f'Total: {total:0.08f}')
 
 @cli.command('send', help='Send BTC to address. ADDRESS - Destination address. Only P2PKH or P2SH addresses supported. AMOUNT - value to send in decimal. Set "ALL" to send all available funds.')
 @click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
@@ -67,7 +66,7 @@ def balance(nonce: int, confirmations: int, new: int, verbose: bool):
 @click.option('--send', help='Send transaction to network, just print to console.', default=False, is_flag=True)
 @click.argument('address', type=str)
 @click.argument('amount', type=str)
-def send(nonce:int , confirmations: int, fee: TBTC, feekb: TSatoshi, address: str, amount: str, send: bool):
+def send(nonce:int , confirmations: int, fee: TBTC, feekb: TSatoshi, address: str, amount: TAmount, send: bool):
     amount = None if amount == 'ALL' else TBTC(amount)
     wallet = Wallet(seed=get_seed(), nonce=nonce)
     print('Address: {address}'.format(address=wallet.privkeys[0].get_p2pkh_address().decode('ascii')))
