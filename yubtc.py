@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import click
 
 from fwd import MINIMAL_FEE, DEFAULT_CONFIRMATIONS
@@ -20,8 +21,9 @@ def newseed(n: int, unique: bool):
 
 @cli.command('address', help='Show native (P2PKH) address and exit.')
 @click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
-def address(nonce: int):
-    wallet = Wallet(seed=get_seed(), nonce=nonce)
+@click.option('--new', help='Count of new unused addresses', default=1, required=False, nargs=1, type=int)
+def address(nonce: int, new: int):
+    wallet = Wallet(seed=get_seed(), nonce=nonce, new_addresses=new)
     print(wallet.adresses[0].get_p2pkh_address().decode('ascii'))
 
 @cli.command('dumpprivkey', help='Show private key in WIF format and exit.')
@@ -35,8 +37,9 @@ def dumpprivkey(nonce: int):
 @click.option('-n', '--nonce', help='Scan adresses from given nonce', default=0, required=False, nargs=1, type=int)
 @click.option('-c', '--confirmations', help='Minimal confirmations for inputs.', default=6, required=False, nargs=1, type=int)
 @click.option('--new', help='Count of new unused addresses', default=1, required=False, nargs=1, type=int)
+@click.option('-e', '--empty', help='Show used empty addresses', default=False, required=False, is_flag=True)
 @click.option('-v', '--verbose', help='Print verbosity', default=False, required=False, is_flag=True)
-def balance(nonce: int, confirmations: int, new: int, verbose: bool):
+def balance(nonce: int, confirmations: int, new: int, empty: bool, verbose: bool):
     from misc import satoshi2btc
     total = 0
     wallet = Wallet(seed=get_seed(), nonce=nonce, new_addresses=new)
@@ -45,6 +48,8 @@ def balance(nonce: int, confirmations: int, new: int, verbose: bool):
         in_amount = 0
         for tx in txs:
             in_amount += tx['amount']
+        if not empty and in_amount == 0 and not privkey.is_unused():
+            continue
         address = privkey.get_p2pkh_address().decode('ascii')
         amount: TBTC = satoshi2btc(in_amount)
         total += amount
