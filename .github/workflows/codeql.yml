@@ -20,7 +20,3 @@ jobs:
         with:
           languages: rust
       - uses: github/codeql-action/analyze@v3
-        # Code scanning is unavailable while the repository is private
-        # (requires GitHub Advanced Security); flip this off once the
-        # repo goes public.
-        continue-on-error: true
