@@ -6,16 +6,21 @@
 C4 enforced (timeout 5s), full spec-vs-code audit. yubtc `ea4a8c4`,
 yubtc-python `acdac55`.
 
+**PUBLIC + v0.2.0 tagged (2026-09-09):** repository made public;
+CodeQL `continue-on-error` dropped (code scanning is free for public
+repos, first real CodeQL run green). Green ci + CodeQL on the squashed
+history. Two CI assumptions fixed en route: the coverage gate is
+region-granularity-sensitive, so the coverage job now pins
+nightly-2026-09-05 (floating nightly-2026-09-08 counts
+`.map_err(closure)?` lines by their never-fired closure bodies and
+phantom-missed 11 statement-level-covered lines in psbt.rs /
+wallet.rs); Kotlin bindings regenerated (4 stale UniFFI API checksums
++ doc-comment paths — would have aborted Android checksum validation).
+Stable `v0.2.0` tagged: release pipeline published 5 CLI archives +
+release/debug APKs, isPrerelease=false.
+
 ## Open
 
-- **Remove `continue-on-error` from `.github/workflows/codeql.yml`**
-  once the repository is made public (owner decision 2026-09-05);
-  until then Code scanning is unavailable for a private repo and the
-  step self-tolerates.
-- **Green CI run on the squashed history** — GitHub Actions quota is
-  exhausted until Oct 1 (private repo); current HEAD verified locally
-  (Rust 996+, Python 1007, JVM 72, cov-gate 100/100). After quota
-  reset / repo publication: verify ci + CodeQL on `ea4a8c4`, then tag
-  the stable `v0.2.0` (release pipeline: CLI + APK in one run).
+- (none)
 
 History of closed items — in git log and `specs/spec.md`.
