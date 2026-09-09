@@ -16,7 +16,7 @@ path = "src/main.rs"
 yubtc-core = { path = "../core" }
 clap = { version = "4.5", features = ["derive"] }
 tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "sync", "io-util"] }
-ratatui = "0.29"
+ratatui = "0.30"
 crossterm = "0.28"
 rpassword = "7"
 hex = { workspace = true }
