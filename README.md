@@ -176,6 +176,8 @@ workflow table — `specs/spec.md`, «Качество и CI»; conventions —
   transitions, state contract).
 - [`CONTRIBUTING.md`](./CONTRIBUTING.md) — conventions, git workflow,
   recipes (new network backend / KDF), Python-mirror rules.
+- [`SECURITY.md`](./SECURITY.md) — vulnerability reporting, scope,
+  design notes, CI security gates.
 - [`TODO.md`](./TODO.md) — known issues and open items.
 
 ## License
