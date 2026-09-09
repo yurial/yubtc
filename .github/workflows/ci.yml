@@ -81,7 +81,9 @@ jobs:
         # locally on the squashed tree: 19208/19208 lines, 1156/1156
         # branches); pin until the carve-out is recalibrated against a
         # newer coverage mapping.
-      - uses: dtolnay/rust-toolchain@nightly-2026-09-05
+      - uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: nightly-2026-09-05
       - uses: taiki-e/install-action@cargo-llvm-cov
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
