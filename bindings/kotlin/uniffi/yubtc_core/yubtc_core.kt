@@ -934,10 +934,10 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_yubtc_core_checksum_func_default_selection() != 5949) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_yubtc_core_checksum_func_entropy_warning() != 41014) {
+    if (lib.uniffi_yubtc_core_checksum_func_entropy_warning() != 15006) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_yubtc_core_checksum_func_estimate_entropy() != 4628) {
+    if (lib.uniffi_yubtc_core_checksum_func_estimate_entropy() != 58820) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_yubtc_core_checksum_func_generate_seed() != 57480) {
@@ -949,7 +949,7 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_yubtc_core_checksum_func_satoshi_to_btc() != 2919) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_yubtc_core_checksum_func_validate_seed() != 14159) {
+    if (lib.uniffi_yubtc_core_checksum_func_validate_seed() != 19132) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
     if (lib.uniffi_yubtc_core_checksum_method_wallethandle_address_info() != 1189) {
@@ -1000,7 +1000,7 @@ private fun uniffiCheckApiChecksums(lib: IntegrityCheckingUniffiLib) {
     if (lib.uniffi_yubtc_core_checksum_method_wallethandle_set_backend() != 36153) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
-    if (lib.uniffi_yubtc_core_checksum_constructor_wallethandle_new() != 8733) {
+    if (lib.uniffi_yubtc_core_checksum_constructor_wallethandle_new() != 65105) {
         throw RuntimeException("UniFFI API checksum mismatch: try cleaning and rebuilding your project")
     }
 }
@@ -1723,7 +1723,7 @@ open class WalletHandle: Disposable, AutoCloseable, WalletHandleInterface
      * for completeness but the wallet's gap-limit walk still starts
      * from this seed/nonce pair.
      *
-     * `strict_bip39` selects the seed-reception policy (spec.md
+     * `strict_bip39` selects the seed-reception policy (specs/spec.md
      * «Seed policy», R-1…R-5): `false` (default everywhere) is
      * permissive — any non-empty phrase is accepted; `true` is the
      * opt-in strict BIP-39 mode — full BIP-39 parse plus the C6
@@ -1731,7 +1731,7 @@ open class WalletHandle: Disposable, AutoCloseable, WalletHandleInterface
      * (R-4). In both modes the empty phrase fails with
      * [`YubtcError::EmptySeed`] (R-2).
      *
-     * `addr_type` selects the receive-address form (spec.md
+     * `addr_type` selects the receive-address form (specs/spec.md
      * «Адресная политика и nonce→path mapping»): `native` (default)
      * → P2WPKH, `taproot` → P2TR key-path, `legacy` → the v0.1
      * P2PKH encoding. For `pbkdf2` wallets the type picks the
@@ -3432,7 +3432,7 @@ public object FfiConverterSequenceTypeUtxoWithNonce: FfiConverterRustBuffer<List
     
 
         /**
-         * Non-blocking low-entropy warning for a phrase (spec.md «Seed
+         * Non-blocking low-entropy warning for a phrase (specs/spec.md «Seed
          * policy», R-6): `Some(warning)` when the non-empty phrase's
          * [`estimate_entropy`] is below `MIN_ENTROPY_WARNING_BITS` (128),
          * `None` when the estimate is at or above the threshold **or** the
@@ -3453,7 +3453,7 @@ public object FfiConverterSequenceTypeUtxoWithNonce: FfiConverterRustBuffer<List
 
         /**
          * Rough entropy estimate of an arbitrary phrase in bits
-         * (`length * log2(|charset|)`, spec.md «Seed policy», R-6). Shared
+         * (`length * log2(|charset|)`, specs/spec.md «Seed policy», R-6). Shared
          * formula for the CLI warning and the UI warning — the estimate is
          * never computed outside the core.
          *
@@ -3518,7 +3518,7 @@ public object FfiConverterSequenceTypeUtxoWithNonce: FfiConverterRustBuffer<List
 
         /**
          * Validate a seed phrase under the selected reception policy
-         * (spec.md «Seed policy», R-1…R-5). Returns the same words, joined
+         * (specs/spec.md «Seed policy», R-1…R-5). Returns the same words, joined
          * by a single space, so the caller can normalise formatting.
          *
          * Contract: `strict = false` (permissive, the system default)
