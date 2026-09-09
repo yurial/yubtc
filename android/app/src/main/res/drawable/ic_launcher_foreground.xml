@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Foreground for the adaptive launcher icon. Stylised "y" inside a
+    108×108dp safe zone (the outer 72×72 area is the safe zone for
+    adaptive icons — anything outside can be clipped by launcher masks).
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- yubtc glyph: lowercase 'y' -->
+    <path
+        android:fillColor="@color/paper"
+        android:pathData="M40,42 L48,42 L48,55 C48,60 50,63 54,63 C58,63 60,60 60,55 L60,42 L68,42 L68,55 C68,64 63,70 54,70 C45,70 40,64 40,55 Z M58,38 L66,38 L54,52 L46,52 Z" />
+</vector>

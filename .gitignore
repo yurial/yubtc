@@ -1,0 +1,72 @@
+# Rust
+/target/
+**/*.rs.bk
+# Cargo.lock IS tracked on purpose: this workspace ships binaries and
+# reproducible builds matter (`cargo test --locked` in ci.yml needs a
+# committed lockfile). Never re-ignore it here.
+
+# Android / Gradle
+.gradle/
+build/
+**/build/
+local.properties
+*.apk
+*.aab
+*.aar
+*.ap_
+*.dex
+*.class
+bin/
+gen/
+out/
+release/
+.signing/
+
+# Android Studio / IntelliJ
+.idea/
+*.iml
+*.iws
+*.ipr
+captures/
+.externalNativeBuild/
+.cxx/
+
+# NDK / UniFFI generated
+**/jniLibs/**/*.so
+**/uniffi/**/*.kt
+# Whitelist yubtc's checked-in UniFFI facade (regenerated and diffed
+# in CI). Must come AFTER the broader `**/uniffi/**/*.kt` blacklist
+# above to re-include the file.
+!bindings/kotlin/uniffi/yubtc_core/*.kt
+
+# Keystores (NEVER commit)
+*.jks
+*.keystore
+keystore.properties
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+*~
+.vscode/
+
+# Coverage / Test
+*.gcda
+*.gcno
+*.lcov
+coverage/
+*.profraw
+*.profdata
+
+# Coverage artifacts (cargo llvm-cov JSON summaries; cov-summary.json
+# is the scripts/cov-gate.sh gate input)
+cov-summary.json
+coverage.json
+
+# Logs
+*.log
+
+# Local tooling artifacts
+core/tests/kat/__pycache__/
+android/.kotlin/

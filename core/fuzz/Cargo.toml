@@ -1,0 +1,81 @@
+[workspace]
+# Empty workspace table — cargo-fuzz scaffolds each project as a
+# self-contained workspace so the nightly-only fuzz toolchain
+# doesn't bleed into the main workspace's stable toolchain.
+# The parent workspace excludes this directory in its root
+# Cargo.toml.
+
+[package]
+name = "yubtc-core-fuzz"
+version = "0.0.0"
+publish = false
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = "0.4"
+hex = "0.4"
+
+[dependencies.yubtc-core]
+path = ".."
+
+[dependencies.bitcoin]
+# Match the version yubtc-core uses — keeps the fuzz harness
+# testing the same bitcoin crate as the rest of the wallet.
+version = "0.31"
+
+# Six fuzz targets — one per critical parser surface in
+# yubtc-core. Each harness is total (the parser returns Result),
+# the fuzz job is to verify that "no panic on adversarial input"
+# property holds for the entire input space.
+#
+# Run a single target for the standard smoke (~10 s) with e.g.
+#
+#   cargo fuzz run fuzz_mnemonic -- -max_total_time=10
+#
+# The .github/workflows/fuzz.yml nightly job runs each target for
+# 60 s (libFuzzer's default per-corpus cap).
+
+[[bin]]
+name = "fuzz_mnemonic"
+path = "fuzz_targets/fuzz_mnemonic.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_hex"
+path = "fuzz_targets/fuzz_hex.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_wif"
+path = "fuzz_targets/fuzz_wif.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_raw_tx"
+path = "fuzz_targets/fuzz_raw_tx.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_bech32"
+path = "fuzz_targets/fuzz_bech32.rs"
+test = false
+doc = false
+bench = false
+
+[[bin]]
+name = "fuzz_psbt"
+path = "fuzz_targets/fuzz_psbt.rs"
+test = false
+doc = false
+bench = false

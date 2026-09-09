@@ -1,0 +1,18 @@
+# yubtc clippy configuration.
+#
+# Project-specific lints. Anything added here is a deliberate policy
+# decision and should be commented with its rationale.
+
+# Disallow `unwrap()` and `expect()` in production code paths — the
+# spec mandates `Result<T, E>` with typed errors and `expect("...")
+# only where an invariant is documented.
+disallowed-methods = [
+    { path = "core::result::Result::unwrap", reason = "use expect with documented invariant or ?-propagation" },
+    { path = "core::option::Option::unwrap", reason = "use expect with documented invariant or ?-propagation" },
+    { path = "std::result::Result::unwrap", reason = "use expect with documented invariant or ?-propagation" },
+    { path = "std::option::Option::unwrap", reason = "use expect with documented invariant or ?-propagation" },
+]
+
+# `Result::expect` is allowed but must carry a message — clippy's
+# `expect_used` lint is enabled by default in 1.81+.
+# We rely on that lint rather than listing `expect` here.

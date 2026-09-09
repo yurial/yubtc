@@ -1,0 +1,8 @@
+# yubtc rustfmt configuration.
+#
+# Default rustfmt settings are fine for now; this file exists so that
+# `cargo fmt --check` is reproducible across contributors and CI.
+edition = "2021"
+max_width = 100
+tab_spaces = 4
+newline_style = "Unix"

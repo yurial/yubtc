@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!--
+        yubtc's theme: no action bar (we draw our own with Compose).
+        `Theme.DeviceDefault.DayNight` lets the window follow the
+        system light/dark mode while Compose owns the colour palette
+        (androidx.compose.material3 ships no XML themes, so the
+        Material Components XML parent is not on the classpath).
+        `enforceStatusBarContrast` is intentionally false —
+        Compose draws under the bars on Android 13+.
+    -->
+    <style name="Theme.Yubtc" parent="android:Theme.DeviceDefault.DayNight">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">true</item>
+    </style>
+</resources>

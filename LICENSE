@@ -1,0 +1,406 @@
+YBTC Limited Source-Available License v1 (YSAL-1.0)
+
+Copyright (c) 2016-2026, YuBTC Developers. All rights reserved.
+
+================================================================================
+PREAMBLE
+================================================================================
+
+This license is intentionally restrictive. It allows individuals to use,
+study, modify, and publicly share the Software and its Modifications under
+this same license. It explicitly forbids the creation of any product —
+whether free or paid — based on the Software, and it forbids any
+commercialization, sublicensing, or alternative relicensing of the Software
+or Modifications. The Licensor reserves the right to use the Software
+commercially and to grant commercial licenses to third parties under
+separate terms.
+
+Public distribution is permitted, but every publicly distributed copy must
+remain under this YSAL-1.0 license forever. The license-preservation
+requirement is the central condition of this license and applies to all
+publicly distributed copies and Modifications.
+
+If you wish to use the Software for any commercial purpose, including
+(without limitation) creating, distributing, or providing any product,
+service, or hosted offering that incorporates the Software, you must obtain
+a separate commercial license from the Licensor.
+
+================================================================================
+DEFINITIONS
+================================================================================
+
+"Software" means the source code, build artifacts, documentation, and any
+associated files distributed under this license.
+
+"Licensor" means the copyright holder(s) listed above.
+
+"Licensee" means any individual who has lawfully obtained a copy of the
+Software.
+
+"Personal Use" means use by an individual for non-commercial, private
+purposes. Personal Use includes studying the Software, building the Software
+for the Licensee's own private use, running the Software on the Licensee's
+own devices, and modifying the Software for the Licensee's own private use.
+Personal Use expressly excludes any activity that benefits a third party,
+an organization, or a commercial entity.
+
+"Product" means any software, service, hosted offering, application, library,
+framework, tool, or derivative work that incorporates, links to, depends on,
+or is derived from the Software, in whole or in part. A Product exists
+regardless of whether it is distributed for free or for a fee, and regardless
+of whether it is provided as a standalone offering or as part of a larger
+system.
+
+"Modify" means to copy, adapt, translate, reverse-engineer, decompile, or
+otherwise create a derivative work based on the Software.
+
+"Share Privately" means to provide a copy of the Software or a Modification
+to another individual, by means other than public distribution, where the
+recipient also uses the Software solely for Personal Use.
+
+"Contributor" means any individual who submits, offers, or has incorporated
+a Contribution into the Software and is not the Licensor. For the avoidance
+of doubt, the Licensor and any Contributor are not the same party, regardless
+of the volume of Contributions made.
+
+"Contribution" means any submission, patch, addition, modification, or other
+work of authorship provided by a Contributor for inclusion in the Software.
+
+================================================================================
+GRANT OF RIGHTS (subject to the Restrictions below)
+================================================================================
+
+Subject to the terms of this license, the Licensor grants each Licensee a
+non-exclusive, non-transferable, revocable right to:
+
+1. Use the Software for Personal Use.
+
+2. Modify the Software for Personal Use.
+
+3. Share Privately the unmodified Software or Modifications with other
+   individuals who also use the Software solely for Personal Use, provided
+   that:
+   a. every copy includes this license in full;
+   b. no consideration of any kind (money, services, access, in-kind
+      payment, or otherwise) is exchanged in connection with the sharing;
+   c. the recipient is informed of and agrees to this license.
+
+4. Publicly distribute the Software or Modifications, by means of public
+   repositories, package registries, file-sharing platforms, content delivery
+   networks, application stores, or any other publicly accessible channel,
+   provided that:
+   a. every publicly distributed copy includes this license in full, in its
+      original form, with the copyright notice intact;
+   b. any Modifications are clearly marked as modifications and identify the
+      nature and author of the changes;
+   c. the publicly distributed copy remains under this YSAL-1.0 license — the
+      Licensee may not relicense, sublicense, or apply any other license terms
+      to the Software or Modifications distributed under this grant;
+   d. no consideration of any kind (money, services, access, in-kind payment,
+      or otherwise) is exchanged in connection with the public distribution
+      itself (charging for support, hosting, or unrelated services is
+      permitted, so long as the Software itself is not sold or licensed for
+      a fee).
+
+The license-preservation requirement (Section 4.c above) is the central
+condition of this license: once the Software or any Modification is publicly
+distributed under this license, it must remain under this license forever,
+including all derivatives. No party may take publicly distributed copies and
+relicense them under more permissive or different terms.
+
+================================================================================
+RESTRICTIONS
+================================================================================
+
+The Licensee MAY NOT, under this license:
+
+1. Create, distribute, market, sell, sublicense, host, or otherwise provide
+   any Product based on the Software, whether for free or for a fee.
+
+2. Use the Software for any commercial purpose, including providing paid
+   services, internal business operations of any organization, or generating
+   revenue (directly or indirectly) from the Software or its use.
+
+3. Sublicense, assign, or transfer the rights granted under this license,
+   except as expressly permitted under Section 4 of "Grant of Rights"
+   (public distribution under this same license).
+
+4. Remove, alter, or obscure any copyright notice, license notice, or
+   attribution in the Software, or replace this license with any other
+   license terms.
+
+5. Use the Software in any manner that competes with a commercial offering
+   of the Licensor or that substitutes for such an offering.
+
+6. Use the Software to provide a hosted or "software-as-a-service" offering
+   to third parties.
+
+================================================================================
+DUAL LICENSING
+================================================================================
+
+The Software is also made available under a separate commercial license for
+parties who wish to use it for purposes prohibited by this license. Use of
+the Software under a commercial license is governed solely by the terms of
+that commercial license agreement.
+
+To inquire about a commercial license, contact the Licensor at the address
+provided in the project repository.
+
+================================================================================
+RESERVATION OF RIGHTS
+================================================================================
+
+The Licensor retains and reserves all rights not expressly granted in this
+license, including without limitation the right to:
+
+1. Use the Software for any purpose, including commercial purposes and the
+   creation of Products.
+
+2. Modify the Software without restriction.
+
+3. Distribute, sublicense, and commercialize the Software and any
+   Modifications thereof.
+
+4. Grant commercial licenses to third parties on terms of the Licensor's
+   choosing.
+
+5. Enforce this license against any violation.
+
+================================================================================
+CONTRIBUTOR TERMS
+================================================================================
+
+Any submission, contribution, patch, or other work of authorship provided
+to the Licensor for inclusion in the Software (a "Contribution") is governed
+by the following terms:
+
+1. The Contributor retains copyright in the Contribution itself.
+
+2. The Contributor hereby grants the Licensor a perpetual, irrevocable,
+   worldwide, royalty-free, fully transferable, sublicensable license to
+   use, reproduce, modify, prepare derivative works of, publicly display,
+   publicly perform, distribute, and otherwise exploit the Contribution,
+   in whole or in part, (a) as part of the Software, (b) as part of any
+   Modification or derivative work thereof, and (c) as part of any Product,
+   commercial offering, or separate commercial license granted by the
+   Licensor to any third party.
+
+3. The Contributor does NOT, by virtue of making a Contribution, acquire
+   any of the rights reserved to the Licensor under "Reservation of Rights"
+   or under any other provision of this license, including without limitation
+   the right to:
+   a. use the Software or any Contribution for any commercial purpose;
+   b. sublicense the Software or any Contribution to any third party;
+   c. grant any commercial license to any third party;
+   d. create, distribute, market, sell, or host any Product based on the
+      Software or any Contribution;
+   e. relicense the Software or any Contribution under any other terms.
+
+4. The Licensor is and remains the sole holder of all licensing, sublicensing,
+   dual-licensing, and commercialization rights in the Software and any
+   Contribution incorporated therein. No Contributor obtains any such rights
+   by reason of contributing. The Contributor's sole rights with respect to
+   the Software are those granted to a Licensee under "Grant of Rights"
+   (Personal Use, Modify for Personal Use, Share Privately, and public
+   distribution under this same license).
+
+5. The Contributor represents and warrants that the Contribution is the
+   Contributor's own original work, or that the Contributor has sufficient
+   rights to make the Contribution under these terms, and that the
+   Contribution does not, to the Contributor's knowledge, infringe any
+   third-party copyright, patent, trademark, or other intellectual property
+   right.
+
+6. If the Contributor wishes to use the Contribution, the Software, or any
+   portion thereof for any purpose prohibited by this section, the Contributor
+   must obtain a separate commercial license from the Licensor on the same
+   terms available to any other third party.
+
+Nothing in this section limits, expands, or modifies the rights and obligations
+of any party under the "Grant of Rights", "Restrictions", or "Reservation of
+Rights" sections of this license.
+
+================================================================================
+DISCLAIMER OF WARRANTY
+================================================================================
+
+THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE", WITHOUT WARRANTY OF
+ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE,
+NON-INFRINGEMENT, ACCURACY, AND FREEDOM FROM DEFECTS. THE LICENSOR MAKES NO
+WARRANTY THAT THE SOFTWARE WILL BE UNINTERRUPTED, ERROR-FREE, SECURE, FREE
+OF HARMFUL COMPONENTS, OR THAT IT WILL MEET THE LICENSEE'S REQUIREMENTS.
+
+NO WARRANTY IS MADE REGARDING:
+- the correctness of any cryptographic implementation or output;
+- the absence of bugs, defects, vulnerabilities, or exploitable weaknesses;
+- the fitness of the Software for any particular use case;
+- the accuracy of any documentation, specification, or claim;
+- the behavior of the Software under malformed, malicious, or unexpected
+  inputs;
+- the absence of backdoors, telemetry, tracking, or undisclosed data
+  collection;
+- compatibility with any future version of Bitcoin protocol, hardware,
+  operating system, network, or third-party software;
+- the continued availability, maintenance, or support of the Software.
+
+================================================================================
+NO LIABILITY FOR ERRORS IN THE CODE
+================================================================================
+
+The Software may contain errors, defects, bugs, vulnerabilities, design flaws,
+logic mistakes, race conditions, or other faults of any kind ("Errors"),
+including but not limited to:
+
+- implementation defects in cryptographic operations (KDF, signing,
+  hashing, address derivation, transaction construction);
+- logic errors in fee calculation, transaction assembly, or UTXO selection;
+- parsing or validation errors in network responses, addresses, scripts,
+  transactions, or user input;
+- concurrency or state-handling errors in multi-step operations (scan,
+  build, broadcast);
+- security vulnerabilities that could allow unauthorized access to funds,
+  secrets, or device;
+- silent failure modes that cause incorrect results without error indication;
+- errors that only manifest under specific timing, network, or hardware
+  conditions.
+
+THE LICENSOR DISCLAIMS ALL LIABILITY FOR ANY ERRORS IN THE CODE, WHETHER
+KNOWN OR UNKNOWN, DISCOVERABLE OR NOT, AND WHETHER OR NOT THE LICENSOR HAS
+BEEN ADVISED OF THE POSSIBILITY OF SUCH ERRORS. THE LICENSEE ACKNOWLEDGES
+THAT THE PRESENCE OF ERRORS IS INHERENT TO SOFTWARE OF THIS COMPLEXITY
+AND ASSUMES ALL RISK ASSOCIATED WITH SUCH ERRORS.
+
+================================================================================
+NO LIABILITY FOR UNFORESEEN CONSEQUENCES
+================================================================================
+
+The Software may produce consequences that were not intended, anticipated,
+or foreseeable by the Licensor at the time of distribution or use
+("Unforeseen Consequences"), including but not limited to:
+
+- financial loss (loss of cryptocurrency, tokens, fiat value, or any other
+  asset) due to any cause, including bugs, network conditions, market
+  conditions, or third-party actions;
+- loss of privacy, anonymity, or confidentiality of any data, including
+  mnemonics, passphrases, private keys, transaction history, or personally
+  identifying information;
+- unauthorized access to or control of the Licensee's funds, devices,
+  accounts, or data by third parties;
+- legal, regulatory, tax, or compliance consequences arising from the
+  Licensee's use of the Software (including but not limited to violations
+  of anti-money-laundering, sanctions, securities, taxation, or reporting
+  laws in any jurisdiction);
+- damage to or destruction of devices, data, networks, or other property;
+- reputational harm, loss of business, or loss of opportunity;
+- chain forks, reorganizations, double-spends, or other consensus-layer
+  events that affect the validity or finality of transactions;
+- failure or compromise of any third-party dependency (Bitcoin network,
+  backend providers, libraries, operating systems, hardware wallets, key
+  storage, or any other external system);
+- changes in Bitcoin protocol, fee market, mining economics, or any other
+  ecosystem condition;
+- any consequence of the Licensee's combination of the Software with other
+  software, hardware, or services, whether or not authorized;
+- any consequence of the Licensee's distribution or public sharing of the
+  Software or Modifications, including actions of recipients or downstream
+  parties;
+- any other consequence, whether or not similar to those listed above,
+  that arises from the use, modification, distribution, or inability to
+  use the Software.
+
+THE LICENSOR DISCLAIMS ALL LIABILITY FOR ANY UNFORESEEN CONSEQUENCES,
+WHETHER OR NOT THE LICENSOR COULD REASONABLY HAVE ANTICIPATED THEM, AND
+WHETHER OR NOT THE LICENSOR HAS BEEN ADVISED OF THE POSSIBILITY OF SUCH
+CONSEQUENCES. THE LICENSEE BEARS ALL RISK ASSOCIATED WITH UNFORESEEN
+CONSEQUENCES.
+
+================================================================================
+ASSUMPTION OF RISK
+================================================================================
+
+BY USING THE SOFTWARE, THE LICENSEE EXPRESSLY ACKNOWLEDGES AND AGREES THAT:
+
+1. The Software is a cryptocurrency wallet that controls access to financial
+   assets.
+
+2. The Software may contain Errors and may produce Unforeseen Consequences.
+
+3. The Licensee is solely responsible for:
+   - evaluating the Software before relying on it;
+   - verifying the correctness of any operation, address, transaction, or
+     output produced by the Software;
+   - maintaining secure backups of mnemonics, passphrases, and other
+     secrets;
+   - maintaining the security of the Licensee's environment (devices,
+     networks, storage, physical access);
+   - complying with all applicable laws, regulations, and tax obligations;
+   - any decision to use, modify, or distribute the Software.
+
+4. The Licensor has no obligation to:
+   - fix, patch, or update the Software;
+   - investigate, confirm, or disclose the existence of any Error;
+   - provide support, documentation, or guidance;
+   - continue development, maintenance, or distribution of the Software.
+
+5. The Licensee's use of the Software is at the Licensee's sole risk.
+
+================================================================================
+LIMITATION OF LIABILITY
+================================================================================
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, IN NO EVENT SHALL THE
+LICENSOR BE LIABLE FOR ANY CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT, STRICT LIABILITY, OR OTHERWISE, ARISING FROM,
+OUT OF, OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE, INCLUDING BUT NOT LIMITED TO:
+- direct, indirect, incidental, special, consequential, or punitive damages;
+- loss of profits, revenue, data, use, goodwill, or other intangible losses;
+- loss of cryptocurrency, tokens, or any other digital or physical assets.
+
+THIS LIMITATION APPLIES EVEN IF THE LICENSOR HAS BEEN ADVISED OF THE
+POSSIBILITY OF SUCH DAMAGES AND EVEN IF ANY REMEDY FAILS OF ITS ESSENTIAL
+PURPOSE.
+
+IN JURISDICTIONS THAT DO NOT ALLOW THE EXCLUSION OR LIMITATION OF CERTAIN
+DAMAGES, THE LICENSOR'S LIABILITY SHALL BE LIMITED TO THE MAXIMUM EXTENT
+PERMITTED BY LAW.
+
+================================================================================
+TERMINATION
+================================================================================
+
+This license terminates automatically and immediately upon any violation of
+its terms by the Licensee. Upon termination, the Licensee must cease all use
+of the Software and destroy all copies in the Licensee's possession or
+control. Termination does not affect any rights or remedies of the Licensor
+that accrued before termination.
+
+================================================================================
+GENERAL
+================================================================================
+
+1. Severability. If any provision of this license is held unenforceable, the
+   remaining provisions remain in full force and effect.
+
+2. No Waiver. Failure by the Licensor to enforce any provision does not
+   constitute a waiver of that provision or any other provision.
+
+3. Entire Agreement. This license constitutes the entire agreement between
+   the Licensor and the Licensee regarding the Software and supersedes all
+   prior or contemporaneous understandings.
+
+4. Governing Law. This license is governed by the laws of the jurisdiction
+   in which the Licensor resides, without regard to conflict-of-laws
+   principles.
+
+5. No Agency. Nothing in this license creates a partnership, agency, or
+   employment relationship between the Licensor and the Licensee.
+
+6. Contact. For commercial licensing inquiries, see the project repository
+   for current contact information.
+
+================================================================================
+END OF LICENSE
+================================================================================

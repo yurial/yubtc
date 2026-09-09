@@ -1,0 +1,528 @@
+{
+  "generator": "core/tests/kat/generate.py",
+  "reference_repo": "yubtc-python",
+  "reference_commit": "76ff5d812882ef74830cf35b3a4765af418585b4",
+  "vector_count": 16,
+  "matrix": "4 KDFs x 2 nonces x 2 seeds; passphrase forced by kdf (empty for yubtc, \"hunter2\" for the rest); invalid combinations excluded (they raise in both implementations); each row carries all three address forms (legacy/native/taproot) -- same key in three encodings for yubtc/argon2id/scrypt (вариант A), purpose-specific keys (m/44'/84'/86') for pbkdf2",
+  "provenance": {
+    "yubtc": "yubtc-python reference (seed2bin/seed2privkey)",
+    "pbkdf2": "yubtc-python reference (seed2bin/seed2privkey)",
+    "argon2id": "yubtc-python reference (seed2bin/seed2privkey)",
+    "scrypt": "yubtc-python reference (seed2bin/seed2privkey)"
+  },
+  "parameters": {
+    "argon2id": {
+      "salt_tag_hex": "79756274632d6172676f6e3269642d763100",
+      "time_cost": 3,
+      "memory_kib": 65536,
+      "parallelism": 4,
+      "version": "0x13",
+      "hash_len": 64
+    },
+    "scrypt": {
+      "salt_tag_hex": "79756274632d7363727970742d763200",
+      "log_n": 15,
+      "r": 16,
+      "p": 1,
+      "dklen": 64
+    }
+  },
+  "vectors": [
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 0,
+      "passphrase": "",
+      "kdf": "yubtc",
+      "seed2bin": "e47a0307ca0c0415fea1fdf37816950f7b337a9f1822313770c76d102180a548",
+      "privkey": "e07a0307ca0c0415fea1fdf37816950f7b337a9f1822313770c76d102180a548",
+      "address": "1DKAVVy8TeAviiEbaGdZQnRBG7r3uzbUER",
+      "wif": "L4k4foXQgEjtz22B32BCB92PKDq3pmWaBHtyYZ5nRQHTM6FPiSB5",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "e07a0307ca0c0415fea1fdf37816950f7b337a9f1822313770c76d102180a548",
+          "address": "1DKAVVy8TeAviiEbaGdZQnRBG7r3uzbUER",
+          "wif": "L4k4foXQgEjtz22B32BCB92PKDq3pmWaBHtyYZ5nRQHTM6FPiSB5"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "e07a0307ca0c0415fea1fdf37816950f7b337a9f1822313770c76d102180a548",
+          "address": "bc1qsugwkunqrd39mc3hzkrr037u77el9t3qdm62ws",
+          "wif": "L4k4foXQgEjtz22B32BCB92PKDq3pmWaBHtyYZ5nRQHTM6FPiSB5"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "e07a0307ca0c0415fea1fdf37816950f7b337a9f1822313770c76d102180a548",
+          "address": "bc1pcffx0knwlkacprp5w0uy8gd93707ueaj4xf8g7gnmqeavd4np5zqes44yl",
+          "wif": "L4k4foXQgEjtz22B32BCB92PKDq3pmWaBHtyYZ5nRQHTM6FPiSB5"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 0,
+      "passphrase": "",
+      "kdf": "yubtc",
+      "seed2bin": "9b777afec99b8db7707569edfeb7d5c7ed079d6295f08aaf3a16e01dc44a674d",
+      "privkey": "98777afec99b8db7707569edfeb7d5c7ed079d6295f08aaf3a16e01dc44a674d",
+      "address": "16z2BATgZWv7RFzFhJtW7UozEjeaZPdsHa",
+      "wif": "L2L5xSVrKSVfocXkEgx49L8BhCq2MSzJTmUFApuH3eUBz1inDk8t",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "98777afec99b8db7707569edfeb7d5c7ed079d6295f08aaf3a16e01dc44a674d",
+          "address": "16z2BATgZWv7RFzFhJtW7UozEjeaZPdsHa",
+          "wif": "L2L5xSVrKSVfocXkEgx49L8BhCq2MSzJTmUFApuH3eUBz1inDk8t"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "98777afec99b8db7707569edfeb7d5c7ed079d6295f08aaf3a16e01dc44a674d",
+          "address": "bc1qgxs4rhrnk4g60gf4ss4rvthhpherxs2qv82ldl",
+          "wif": "L2L5xSVrKSVfocXkEgx49L8BhCq2MSzJTmUFApuH3eUBz1inDk8t"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "98777afec99b8db7707569edfeb7d5c7ed079d6295f08aaf3a16e01dc44a674d",
+          "address": "bc1pfrycylv397q3mlyna65dzdt2eysyj0h65tnu9e8ydp4wadp4k67qzlh0vs",
+          "wif": "L2L5xSVrKSVfocXkEgx49L8BhCq2MSzJTmUFApuH3eUBz1inDk8t"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 7,
+      "passphrase": "",
+      "kdf": "yubtc",
+      "seed2bin": "2881ba672ae52ead2ade2ebf845f6c762578366866f327dc40fa30cd557af8c7",
+      "privkey": "2881ba672ae52ead2ade2ebf845f6c762578366866f327dc40fa30cd557af847",
+      "address": "17TzYpMLiFDvNqn9B1QkMw8XoLWkM5YSAJ",
+      "wif": "KxaT6SoedKv6StRvYavfrdZo4nVShsYBW5v6WfwpentRJkvwgqT5",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "2881ba672ae52ead2ade2ebf845f6c762578366866f327dc40fa30cd557af847",
+          "address": "17TzYpMLiFDvNqn9B1QkMw8XoLWkM5YSAJ",
+          "wif": "KxaT6SoedKv6StRvYavfrdZo4nVShsYBW5v6WfwpentRJkvwgqT5"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "2881ba672ae52ead2ade2ebf845f6c762578366866f327dc40fa30cd557af847",
+          "address": "bc1qgm4ehhqwcrmc0ltuw87kf7re30p36w7nxwuqz7",
+          "wif": "KxaT6SoedKv6StRvYavfrdZo4nVShsYBW5v6WfwpentRJkvwgqT5"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "2881ba672ae52ead2ade2ebf845f6c762578366866f327dc40fa30cd557af847",
+          "address": "bc1pmyff2f0ydnmu0f73cxvvsk508ytkf9nmklx86ncj9f7gjuk8vk0q7hmagx",
+          "wif": "KxaT6SoedKv6StRvYavfrdZo4nVShsYBW5v6WfwpentRJkvwgqT5"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 7,
+      "passphrase": "",
+      "kdf": "yubtc",
+      "seed2bin": "afde2dc6e00e56db58cbcedc47176ae9e2012a86389a90f4c111123cb7e6f93d",
+      "privkey": "a8de2dc6e00e56db58cbcedc47176ae9e2012a86389a90f4c111123cb7e6f97d",
+      "address": "1LAR4X6wb4uzxsdrKfkK5Z56H42V6wxg77",
+      "wif": "L2sy6Z92dTUfALSCWqbrBhBcUMV1ydoyGqUXiNcQGNFuctzSCvrZ",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "a8de2dc6e00e56db58cbcedc47176ae9e2012a86389a90f4c111123cb7e6f97d",
+          "address": "1LAR4X6wb4uzxsdrKfkK5Z56H42V6wxg77",
+          "wif": "L2sy6Z92dTUfALSCWqbrBhBcUMV1ydoyGqUXiNcQGNFuctzSCvrZ"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "a8de2dc6e00e56db58cbcedc47176ae9e2012a86389a90f4c111123cb7e6f97d",
+          "address": "bc1q6ger06pzngum757mgq3y7rsnewna3dge3r3h9g",
+          "wif": "L2sy6Z92dTUfALSCWqbrBhBcUMV1ydoyGqUXiNcQGNFuctzSCvrZ"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "a8de2dc6e00e56db58cbcedc47176ae9e2012a86389a90f4c111123cb7e6f97d",
+          "address": "bc1ppu20yphzl7hqcagzu5fk87dm6dsrfqj95rg4p78448skqr6nccxqt6xt4w",
+          "wif": "L2sy6Z92dTUfALSCWqbrBhBcUMV1ydoyGqUXiNcQGNFuctzSCvrZ"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 0,
+      "passphrase": "hunter2",
+      "kdf": "pbkdf2",
+      "seed2bin": "377b9f0c4cedfe7816f79a1bac8406772192c32487171928d9d15f0cd7262a8f",
+      "privkey": "377b9f0c4cedfe7816f79a1bac8406772192c32487171928d9d15f0cd7262a8f",
+      "address": "1PygMK85EafpreVxPZA4UkpV3sHsYQ7ait",
+      "wif": "Ky5Za6nEr8YaqXPCiiUGEWbkFSDCzSGL2G34tUwVVwRPaQe5pzQJ",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "377b9f0c4cedfe7816f79a1bac8406772192c32487171928d9d15f0cd7262a8f",
+          "address": "1PygMK85EafpreVxPZA4UkpV3sHsYQ7ait",
+          "wif": "Ky5Za6nEr8YaqXPCiiUGEWbkFSDCzSGL2G34tUwVVwRPaQe5pzQJ"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "cb1e21baa8d4ba94f2827ad71a5c63260f85a9715c41bc628cd2ecc4d5b4d6fb",
+          "address": "bc1qlwl72jzgcey079rpj2wa0rph4scyj5hdc4u3ex",
+          "wif": "L42Ya9Mie9z5tYbSYacDrBF2GvyDRiivFovkXF5hUbiC8R88m1ty"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "bb412dcbe8e3aa833941984423c4978218d90dd5b97ff822faa65d3c587ae49c",
+          "address": "bc1p5vks6uffr2zsda2gckw5fhp7etxmglzs2vmz2tyrwvy3nx6agz4sv4y2gg",
+          "wif": "L3Vi6Z7M6VwAnPVd8m4r3YS3AQ1p4D7W9Qp5hPBekbcMwa3ELXZ8"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 0,
+      "passphrase": "hunter2",
+      "kdf": "pbkdf2",
+      "seed2bin": "e89f955a8e7c4510054a72c08a521007fb324e718b1bd75e6ae5d0db479811fb",
+      "privkey": "e89f955a8e7c4510054a72c08a521007fb324e718b1bd75e6ae5d0db479811fb",
+      "address": "1NnLkh5TCzPz3b3ZqtW9T9Y4CknFQnTZDg",
+      "wif": "L51uAvsqKJq3X1BA4HENUmbCqYe9rqvnWwpdZy11X2hmMnHEq6FD",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "e89f955a8e7c4510054a72c08a521007fb324e718b1bd75e6ae5d0db479811fb",
+          "address": "1NnLkh5TCzPz3b3ZqtW9T9Y4CknFQnTZDg",
+          "wif": "L51uAvsqKJq3X1BA4HENUmbCqYe9rqvnWwpdZy11X2hmMnHEq6FD"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "e0dd9ef48380dd8b473d2d69d781b423e895dc814c56cd8499606318dce88aa4",
+          "address": "bc1qc3nrf8377zg34svenhq85wa2j0cxys9qs4ueng",
+          "wif": "L4kpYBagARMWPkSHtJScLy6us371C93dwrKVHAw3zV4uq965Z6GG"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "c10a5b6d8d72fbe7a0ad9fd7d2d9acd4953915f1ea063b628e5a9602c41b5000",
+          "address": "bc1pu77azh00ta8pq34hes3rf3scsd7dc9wc6vdqlm2s7nym8a8a2a8sjpm5vm",
+          "wif": "L3gxRGK642QSxEct49JBELVjN1UfaDNTWHqabk28kNSB3k959P1m"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 7,
+      "passphrase": "hunter2",
+      "kdf": "pbkdf2",
+      "seed2bin": "fa12b7ba0c1b4a1b462ecda99f86c965eff85aec256d1229cabee3edcde97b71",
+      "privkey": "fa12b7ba0c1b4a1b462ecda99f86c965eff85aec256d1229cabee3edcde97b71",
+      "address": "18M4hoTyMoGnec8hjdvPhyuz98ohPjZJC3",
+      "wif": "L5bpXswaJ1d52VzfPARat93XaM8DHHrzxA2EgyKhZHRLvdqTnQ5E",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "fa12b7ba0c1b4a1b462ecda99f86c965eff85aec256d1229cabee3edcde97b71",
+          "address": "18M4hoTyMoGnec8hjdvPhyuz98ohPjZJC3",
+          "wif": "L5bpXswaJ1d52VzfPARat93XaM8DHHrzxA2EgyKhZHRLvdqTnQ5E"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "2fde42225e626014c0d7d0e0e86840abda049860c338e531b3ef3261007e5c91",
+          "address": "bc1qjpw3n5wrx0w0ntkhjrz2tn8pt5acfeg4uesq28",
+          "wif": "Kxpm4EtspWS7dev3FP8cn5JuS26KTS3vhopRjNuWnEAQcL2iW8wq"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "29ac7fa9b6b385e52513f02f33638d292e8872bc9d02f6856f4ef9a769119395",
+          "address": "bc1phztzm0q630y2qg3kz4ncgu7z9azdn6w2z39erv059yp30w9y40qql83msk",
+          "wif": "Kxcig8ydViYvEmnWfD7D8ueVKJdb4LSLeE9i7Rdn2aKCPH6TbfQ3"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 7,
+      "passphrase": "hunter2",
+      "kdf": "pbkdf2",
+      "seed2bin": "85c0c167f22dccdb1bff74c013566c725db5502c1c150ec96628766ab50366ca",
+      "privkey": "85c0c167f22dccdb1bff74c013566c725db5502c1c150ec96628766ab50366ca",
+      "address": "13APFfsCz2iDxQ3A56DBe8oMrrJfD1UWj9",
+      "wif": "L1hi5oRXSb2GqEEEnyy6xEyse5KWmBpae4xUfcUMwNsxfX9gEm4b",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "85c0c167f22dccdb1bff74c013566c725db5502c1c150ec96628766ab50366ca",
+          "address": "13APFfsCz2iDxQ3A56DBe8oMrrJfD1UWj9",
+          "wif": "L1hi5oRXSb2GqEEEnyy6xEyse5KWmBpae4xUfcUMwNsxfX9gEm4b"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "321ca6bedb2f791cf1c97c2376f7d193674d33a53ddb6025c601d11c48ab1f06",
+          "address": "bc1q6ycsktkzyvlmf3kacgta0dywr7h9ajx3kdk0hd",
+          "wif": "Kxu82LcYwU64FGmxCpcAGfeiqoyTrnzkNkyjCxyugzkuFhFZuUxy"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "b392470f8eb8ae98c2cc9fa556a0c24926c4df148cc3dbe81100d307a43b1dfd",
+          "address": "bc1plls43mlmd6px2xgaxgxhr0gd5m3tvqfa2txaxjefnua9kvjcrkwszyl0zz",
+          "wif": "L3Emrha1hqfjcw7ZTTK1DNeCjJZaLkj1kfFMkPbpJFgNzZ41eFVq"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 0,
+      "passphrase": "hunter2",
+      "kdf": "argon2id",
+      "seed2bin": "207cdc4fab7c3882f57ca55b98b52f0c5dbfe8ecf40bba720815d3ea0aa7ca95",
+      "privkey": "207cdc4fab7c3882f57ca55b98b52f0c5dbfe8ecf40bba720815d3ea0aa7ca95",
+      "address": "1NFkumMpCJGj8kiSwUSnJdrLKVfxzByxdd",
+      "wif": "KxJrzhXMMFztnNszJbH7RtG1AqTQ7nvcRPb4SpKFwGzubJx9fPPf",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "207cdc4fab7c3882f57ca55b98b52f0c5dbfe8ecf40bba720815d3ea0aa7ca95",
+          "address": "1NFkumMpCJGj8kiSwUSnJdrLKVfxzByxdd",
+          "wif": "KxJrzhXMMFztnNszJbH7RtG1AqTQ7nvcRPb4SpKFwGzubJx9fPPf"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "207cdc4fab7c3882f57ca55b98b52f0c5dbfe8ecf40bba720815d3ea0aa7ca95",
+          "address": "bc1qayj3uusdldgrjagzpkfaekc2plhs5s52trp8pl",
+          "wif": "KxJrzhXMMFztnNszJbH7RtG1AqTQ7nvcRPb4SpKFwGzubJx9fPPf"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "207cdc4fab7c3882f57ca55b98b52f0c5dbfe8ecf40bba720815d3ea0aa7ca95",
+          "address": "bc1pg8mmfygepj3uesmdu3ehqawgqep3c9eulmps7q2h86rk5ggg39cqm9wjer",
+          "wif": "KxJrzhXMMFztnNszJbH7RtG1AqTQ7nvcRPb4SpKFwGzubJx9fPPf"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 0,
+      "passphrase": "hunter2",
+      "kdf": "argon2id",
+      "seed2bin": "a74f131f4dd5a7ac9757d4390c9dab585e153804da7295c20d211dddb2ecc78e",
+      "privkey": "a74f131f4dd5a7ac9757d4390c9dab585e153804da7295c20d211dddb2ecc78e",
+      "address": "1KH4F5HVUbfaDgJ7Umqa5H3YwFUmk2y6pT",
+      "wif": "L2pwKyZ1r6b3RZFzMeRbXY8jFBju9x4fvY6oZ5K9rCSaXnWj9PSb",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "a74f131f4dd5a7ac9757d4390c9dab585e153804da7295c20d211dddb2ecc78e",
+          "address": "1KH4F5HVUbfaDgJ7Umqa5H3YwFUmk2y6pT",
+          "wif": "L2pwKyZ1r6b3RZFzMeRbXY8jFBju9x4fvY6oZ5K9rCSaXnWj9PSb"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "a74f131f4dd5a7ac9757d4390c9dab585e153804da7295c20d211dddb2ecc78e",
+          "address": "bc1qepa6q4hkdcd6nsjpkda8efshs8t5r86p6uw75f",
+          "wif": "L2pwKyZ1r6b3RZFzMeRbXY8jFBju9x4fvY6oZ5K9rCSaXnWj9PSb"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "a74f131f4dd5a7ac9757d4390c9dab585e153804da7295c20d211dddb2ecc78e",
+          "address": "bc1puyke07e93k0wlfwnjdxw73rnr60d0xrld2xf2ldkfl4vhxuv7v0ss0t0ww",
+          "wif": "L2pwKyZ1r6b3RZFzMeRbXY8jFBju9x4fvY6oZ5K9rCSaXnWj9PSb"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 7,
+      "passphrase": "hunter2",
+      "kdf": "argon2id",
+      "seed2bin": "54ef14f39ffc708b7afa5139b00f6739b2e8c3019d49698c82a891b6a6916961",
+      "privkey": "54ef14f39ffc708b7afa5139b00f6739b2e8c3019d49698c82a891b6a6916961",
+      "address": "1ENv4btQWyD9M5L6sr2Qvx6sNeGYoXZYiz",
+      "wif": "Kz4p1W3DXkAgTBJ1JUbGc6iaBjztqm1FHbNr44b5q3fH3jAYpueL",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "54ef14f39ffc708b7afa5139b00f6739b2e8c3019d49698c82a891b6a6916961",
+          "address": "1ENv4btQWyD9M5L6sr2Qvx6sNeGYoXZYiz",
+          "wif": "Kz4p1W3DXkAgTBJ1JUbGc6iaBjztqm1FHbNr44b5q3fH3jAYpueL"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "54ef14f39ffc708b7afa5139b00f6739b2e8c3019d49698c82a891b6a6916961",
+          "address": "bc1qj2l259dzm3d26thccnj0vy5kn95vnag7rdyenq",
+          "wif": "Kz4p1W3DXkAgTBJ1JUbGc6iaBjztqm1FHbNr44b5q3fH3jAYpueL"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "54ef14f39ffc708b7afa5139b00f6739b2e8c3019d49698c82a891b6a6916961",
+          "address": "bc1p4g8sqrr02sjg2jnah5u22c5g0pzdstr03yehxazs0pv7k87w04aq9ryjqz",
+          "wif": "Kz4p1W3DXkAgTBJ1JUbGc6iaBjztqm1FHbNr44b5q3fH3jAYpueL"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 7,
+      "passphrase": "hunter2",
+      "kdf": "argon2id",
+      "seed2bin": "edd9c37342d947372cdf45d6c2017518cbc8b418ba3d08341d8376ce7a496e42",
+      "privkey": "edd9c37342d947372cdf45d6c2017518cbc8b418ba3d08341d8376ce7a496e42",
+      "address": "1C52wgsc7uhwJVFqrnhetoEVmKkEhX7YxC",
+      "wif": "L5C4Wwfz54B2LrPgdXapBeJYhFSf6PV2HonuSWCrscdr7A8pvZfP",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "edd9c37342d947372cdf45d6c2017518cbc8b418ba3d08341d8376ce7a496e42",
+          "address": "1C52wgsc7uhwJVFqrnhetoEVmKkEhX7YxC",
+          "wif": "L5C4Wwfz54B2LrPgdXapBeJYhFSf6PV2HonuSWCrscdr7A8pvZfP"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "edd9c37342d947372cdf45d6c2017518cbc8b418ba3d08341d8376ce7a496e42",
+          "address": "bc1q09k2k476plvey6laq2het2d7qdh4924ahks3dv",
+          "wif": "L5C4Wwfz54B2LrPgdXapBeJYhFSf6PV2HonuSWCrscdr7A8pvZfP"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "edd9c37342d947372cdf45d6c2017518cbc8b418ba3d08341d8376ce7a496e42",
+          "address": "bc1paeyqxnkzjtj7d5dcj8vyrfws8fwrckcaurruaeekm84lrpume5aqhj0xvd",
+          "wif": "L5C4Wwfz54B2LrPgdXapBeJYhFSf6PV2HonuSWCrscdr7A8pvZfP"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 0,
+      "passphrase": "hunter2",
+      "kdf": "scrypt",
+      "seed2bin": "616b39ec565e5ffd3c927a192de22b53e6dbd01f327527cbdb64b6a18b2c6f00",
+      "privkey": "616b39ec565e5ffd3c927a192de22b53e6dbd01f327527cbdb64b6a18b2c6f00",
+      "address": "1GvhppYFCB1PCBvDCDxrkf8r7WSRh7iDPG",
+      "wif": "KzV5cimibrrvNUSJqm1i4ppYoPn7YuENfRV7Co8mMMhR7MtPT9DP",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "616b39ec565e5ffd3c927a192de22b53e6dbd01f327527cbdb64b6a18b2c6f00",
+          "address": "1GvhppYFCB1PCBvDCDxrkf8r7WSRh7iDPG",
+          "wif": "KzV5cimibrrvNUSJqm1i4ppYoPn7YuENfRV7Co8mMMhR7MtPT9DP"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "616b39ec565e5ffd3c927a192de22b53e6dbd01f327527cbdb64b6a18b2c6f00",
+          "address": "bc1q46eq9c7frl2jt0j7n5w53csxe8djf60hewwpdt",
+          "wif": "KzV5cimibrrvNUSJqm1i4ppYoPn7YuENfRV7Co8mMMhR7MtPT9DP"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "616b39ec565e5ffd3c927a192de22b53e6dbd01f327527cbdb64b6a18b2c6f00",
+          "address": "bc1pw5gl4sj6gt5vtqzss8hc2akw50jl0sp83ntckm8yukajjspddlmsmhxd9h",
+          "wif": "KzV5cimibrrvNUSJqm1i4ppYoPn7YuENfRV7Co8mMMhR7MtPT9DP"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 0,
+      "passphrase": "hunter2",
+      "kdf": "scrypt",
+      "seed2bin": "a17c96f578bd901cc03c32a7c6797be8eb88219cc7541e4c5e5632787182652d",
+      "privkey": "a17c96f578bd901cc03c32a7c6797be8eb88219cc7541e4c5e5632787182652d",
+      "address": "19A1vrt3uAZomHb6Xwx5ZVRtRxgeDcDNPS",
+      "wif": "L2dcuY5UFTs9bZP5cVd37PKJMJa7G5BByyk8oPcchinp8NtiprpV",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "a17c96f578bd901cc03c32a7c6797be8eb88219cc7541e4c5e5632787182652d",
+          "address": "19A1vrt3uAZomHb6Xwx5ZVRtRxgeDcDNPS",
+          "wif": "L2dcuY5UFTs9bZP5cVd37PKJMJa7G5BByyk8oPcchinp8NtiprpV"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "a17c96f578bd901cc03c32a7c6797be8eb88219cc7541e4c5e5632787182652d",
+          "address": "bc1qt96cvm8jyx39ld4helh5tgh7mdhqk9ysn50tkj",
+          "wif": "L2dcuY5UFTs9bZP5cVd37PKJMJa7G5BByyk8oPcchinp8NtiprpV"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "a17c96f578bd901cc03c32a7c6797be8eb88219cc7541e4c5e5632787182652d",
+          "address": "bc1px37cn6qljltzp2wz3phkz9sh5rse92ezlvcm0pzvtf888pwq96mq2x5dgg",
+          "wif": "L2dcuY5UFTs9bZP5cVd37PKJMJa7G5BByyk8oPcchinp8NtiprpV"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon about",
+      "nonce": 7,
+      "passphrase": "hunter2",
+      "kdf": "scrypt",
+      "seed2bin": "34eb461c7b1a944a1a0a49a0ad5cf1d1e0d8f9c1da58999d346975b265ac1e63",
+      "privkey": "34eb461c7b1a944a1a0a49a0ad5cf1d1e0d8f9c1da58999d346975b265ac1e63",
+      "address": "14i7LvngSWFDmc6FRgW6tritY2EPouvS7H",
+      "wif": "KxzaWazHVb3AqY3PqSnQV2oVKCuWQY84AQQPEciAMHrKiYjK9nRr",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "34eb461c7b1a944a1a0a49a0ad5cf1d1e0d8f9c1da58999d346975b265ac1e63",
+          "address": "14i7LvngSWFDmc6FRgW6tritY2EPouvS7H",
+          "wif": "KxzaWazHVb3AqY3PqSnQV2oVKCuWQY84AQQPEciAMHrKiYjK9nRr"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "34eb461c7b1a944a1a0a49a0ad5cf1d1e0d8f9c1da58999d346975b265ac1e63",
+          "address": "bc1q9zht5fvqcdma7j7l0mkfwdewu3f3wks98vgsjg",
+          "wif": "KxzaWazHVb3AqY3PqSnQV2oVKCuWQY84AQQPEciAMHrKiYjK9nRr"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "34eb461c7b1a944a1a0a49a0ad5cf1d1e0d8f9c1da58999d346975b265ac1e63",
+          "address": "bc1p7328dxgknsjrcef0xyegspv4zj0mw66vgwvvlk9m958ne9a529nsvu3su5",
+          "wif": "KxzaWazHVb3AqY3PqSnQV2oVKCuWQY84AQQPEciAMHrKiYjK9nRr"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    },
+    {
+      "seed": "yubtc kat vector seed not a bip39 phrase 12345",
+      "nonce": 7,
+      "passphrase": "hunter2",
+      "kdf": "scrypt",
+      "seed2bin": "0737e7d7d14e4bef850ff3d72c1b2fad54e72a73bbe761535e2a21ac04619054",
+      "privkey": "0737e7d7d14e4bef850ff3d72c1b2fad54e72a73bbe761535e2a21ac04619054",
+      "address": "1EqtBazMiLiw4r3JtvHX8LwFLFRM8NxvuT",
+      "wif": "KwTk1vkDGsdwL9xY8VLmFXqHcH6Aa74YTFVX4W8ywJf8HiA1qL5M",
+      "address_forms": {
+        "legacy": {
+          "addr_type": "legacy",
+          "privkey": "0737e7d7d14e4bef850ff3d72c1b2fad54e72a73bbe761535e2a21ac04619054",
+          "address": "1EqtBazMiLiw4r3JtvHX8LwFLFRM8NxvuT",
+          "wif": "KwTk1vkDGsdwL9xY8VLmFXqHcH6Aa74YTFVX4W8ywJf8HiA1qL5M"
+        },
+        "native": {
+          "addr_type": "native",
+          "privkey": "0737e7d7d14e4bef850ff3d72c1b2fad54e72a73bbe761535e2a21ac04619054",
+          "address": "bc1qjlv98r8t9w43emgmyrfudlcs2cl0pd0fmlagsf",
+          "wif": "KwTk1vkDGsdwL9xY8VLmFXqHcH6Aa74YTFVX4W8ywJf8HiA1qL5M"
+        },
+        "taproot": {
+          "addr_type": "taproot",
+          "privkey": "0737e7d7d14e4bef850ff3d72c1b2fad54e72a73bbe761535e2a21ac04619054",
+          "address": "bc1pdhun56uuwnxt0k0jg9etkrpdu4hghceashx2384evnhwgj0mk6yql0lu2v",
+          "wif": "KwTk1vkDGsdwL9xY8VLmFXqHcH6Aa74YTFVX4W8ywJf8HiA1qL5M"
+        }
+      },
+      "provenance": "yubtc-python reference"
+    }
+  ]
+}

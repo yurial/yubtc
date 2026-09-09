@@ -1,0 +1,448 @@
+# yubtc — single release pipeline (CLI + Android APK).
+#
+# Owner decision 2026-09-05: android.yml is removed and its jobs are
+# absorbed here. This workflow is the only place that builds the
+# Android cdylibs, checks Kotlin bindings drift, runs the JVM unit
+# tests and assembles the APKs — on release tags only (per-PR Android
+# checks are intentionally dropped; regular pushes stay gated by
+# ci.yml).
+#
+# Triggered only by a pushed tag matching `v*`. No push/PR triggers:
+# regular pushes are gated by ci.yml, so this workflow never runs
+# on branches or pull requests.
+#
+# Pipeline:
+#   1. build-cli — matrix over 5 targets:
+#        x86_64-unknown-linux-gnu   (ubuntu-latest, native)
+#        aarch64-unknown-linux-gnu  (ubuntu-latest, cross-compiled)
+#        x86_64-apple-darwin        (macos-latest, cross-compiled)
+#        aarch64-apple-darwin       (macos-latest, native — arm64 runner)
+#        x86_64-pc-windows-msvc     (windows-latest, native)
+#      Each job builds the `yubtc` binary (the cli/ package is named
+#      `yubtc`, its bin is `yubtc`) and packages it as
+#      yubtc-<version>-<target>.(tar.gz|zip) — tar.gz on unix,
+#      zip on Windows. The archive name carries the version (tag
+#      without the leading `v`) and the target triple; the binary
+#      inside keeps its plain name so it is runnable after unpacking.
+#   2. build-rust — matrix over the 3 Android ABIs (arm64-v8a,
+#      armeabi-v7a, x86_64) on NDK r27: compiles `libyubtc_core.so`
+#      per target and uploads it as a per-ABI artifact. Cargo always
+#      writes to the workspace-root `target/` (`core` is a workspace
+#      member and nothing overrides `build.target-dir`), which is the
+#      same location `:app:copyNativeLibs` consumes.
+#   3. bindings — regenerates the Kotlin facade from the host cdylib
+#      and diffs it against the checked-in copy in `bindings/kotlin/`.
+#   4. unit-tests — `:app:testDebugUnitTest`, the pure-JVM suite
+#      (LockScheduler / SettingsRepository and friends).
+#   5. apk — downloads every per-ABI .so back into the canonical
+#      location (`target/<triple>/release/`), decodes the release
+#      keystore secret if present, and runs both `assembleDebug`
+#      (always-on smoke target) and `assembleRelease` (signs with the
+#      real keystore when configured, debug fallback otherwise).
+#   6. release — needs build-cli AND apk; downloads all CLI archives
+#      plus both APKs and attaches them to one GitHub Release for the
+#      tag, next to each other:
+#        yubtc-<version>-<target>.(tar.gz|zip)   — CLI, 5 targets
+#        yubtc-<version>-release.apk             — Android
+#        yubtc-<version>-debug.apk               — Android smoke
+#
+# Cross-compile notes:
+#   - aarch64-unknown-linux-gnu: plain cargo needs an aarch64 linker
+#     plus target system libraries; wiring them by hand (apt package +
+#     CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER) is fragile across
+#     runner image updates. taiki-e/setup-cross-toolchain-action@v1
+#     installs the Debian cross toolchain and exports the linker
+#     variables in one step — the simplest reliable option (avoids the
+#     Docker-in-Docker overhead of `cross`).
+#   - x86_64-apple-darwin on the arm64 macos runner: Apple's toolchain
+#     links both architectures out of the box; only the Rust target
+#     needs installing (done below via `targets:`).
+#   - Android ABIs: NDK r27 per-API clang wrappers; CC/CXX/AR point at
+#     the same wrapper (see the build-rust job) — `ring` compiles C
+#     via the `cc` crate, which does not pick the NDK wrapper up from
+#     the linker env alone.
+
+name: release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+# One release pipeline at a time, never cancelled mid-flight: a
+# re-pushed tag (or two tags pushed in quick succession) must not race
+# another run writing release assets.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build-cli:
+    name: build-cli (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
+          - os: macos-latest
+            target: x86_64-apple-darwin
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: ${{ matrix.target }}
+      - name: Set up aarch64-linux cross toolchain
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        uses: taiki-e/setup-cross-toolchain-action@v1
+        with:
+          target: ${{ matrix.target }}
+      - name: cargo build --release
+        run: cargo build --release -p yubtc --target ${{ matrix.target }}
+      - name: Package (tar.gz)
+        if: runner.os != 'Windows'
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          archive="yubtc-${version}-${{ matrix.target }}"
+          tar -czf "${archive}.tar.gz" \
+            -C "target/${{ matrix.target }}/release" yubtc
+      - name: Package (zip)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $version = "${{ github.ref_name }}".TrimStart("v")
+          $archive = "yubtc-$version-${{ matrix.target }}"
+          Compress-Archive `
+            -Path "target/${{ matrix.target }}/release/yubtc.exe" `
+            -DestinationPath "$archive.zip"
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cli-${{ matrix.target }}
+          path: |
+            yubtc-*.tar.gz
+            yubtc-*.zip
+          if-no-files-found: error
+
+  build-rust:
+    name: build-rust (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: aarch64-linux-android
+            triple: arm64-v8a
+            linker_env: CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER
+            linker_path: toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android30-clang
+          - target: armv7-linux-androideabi
+            triple: armeabi-v7a
+            linker_env: CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER
+            linker_path: toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi30-clang
+          - target: x86_64-linux-android
+            triple: x86_64
+            linker_env: CARGO_TARGET_X86_64_LINUX_ANDROID_LINKER
+            linker_path: toolchains/llvm/prebuilt/linux-x86_64/bin/x86_64-linux-android30-clang
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Install Android NDK r27
+        id: install-ndk
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 30
+          ndk-version: r27
+
+      - name: Resolve NDK path
+        id: ndk-path
+        run: |
+          # The NDK is installed under the SDK root. Print the absolute
+          # path so downstream steps can derive the linker location
+          # deterministically.
+          if [ -n "${ANDROID_HOME}" ] && [ -d "${ANDROID_HOME}/ndk" ]; then
+            ls -1 "${ANDROID_HOME}/ndk"
+            echo "path=${ANDROID_HOME}/ndk/$(ls -1 "${ANDROID_HOME}/ndk" | head -1)" >> "${GITHUB_OUTPUT}"
+          elif [ -n "${ANDROID_NDK_ROOT}" ]; then
+            echo "path=${ANDROID_NDK_ROOT}" >> "${GITHUB_OUTPUT}"
+          else
+            echo "::error::ANDROID_HOME not set or NDK not installed"
+            exit 1
+          fi
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+        with:
+          key: android-${{ matrix.target }}
+
+      - name: Build yubtc-core (${{ matrix.target }}, cdylib)
+        working-directory: core
+        env:
+          # `steps` context is not available in job-level `env:` (GitHub
+          # rejects it at parse time — startup_failure), so the NDK path
+          # resolved by the `ndk-path` step above is referenced from the
+          # step-level env instead.
+          ANDROID_NDK_HOME: ${{ steps.ndk-path.outputs.path }}
+          ${{ matrix.linker_env }}: ${{ steps.ndk-path.outputs.path }}/${{ matrix.linker_path }}
+          # `ring` compiles C via the `cc` crate, which does not pick
+          # the NDK wrapper up from the linker env alone. Point CC/CXX
+          # at the same per-API clang wrapper (the NDK bin dir also
+          # carries `<wrapper>++`) and AR at the NDK llvm-ar.
+          CC: ${{ steps.ndk-path.outputs.path }}/${{ matrix.linker_path }}
+          CXX: ${{ steps.ndk-path.outputs.path }}/${{ matrix.linker_path }}++
+          AR: ${{ steps.ndk-path.outputs.path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        run: |
+          cargo build --release \
+            --target ${{ matrix.target }} \
+            -p yubtc-core \
+            --lib
+
+      - name: Locate .so
+        id: locate
+        run: |
+          SO=$(find target/${{ matrix.target }}/release -maxdepth 1 -name 'libyubtc_core.so' | head -1)
+          if [ -z "${SO}" ]; then
+            echo "::error::libyubtc_core.so not produced for ${{ matrix.target }}"
+            exit 1
+          fi
+          echo "so=${SO}" >> "${GITHUB_OUTPUT}"
+
+      - name: Upload .so (${{ matrix.triple }})
+        uses: actions/upload-artifact@v4
+        with:
+          name: yubtc-android-${{ matrix.triple }}
+          path: ${{ steps.locate.outputs.so }}
+          if-no-files-found: error
+
+  bindings:
+    name: Verify Kotlin bindings are in sync
+    needs: build-rust
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install uniffi-bindgen
+        run: cargo install uniffi --version 0.32.0 --locked --features cli
+
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Build yubtc-core (host)
+        working-directory: core
+        run: cargo build -p yubtc-core --lib
+
+      - name: Regenerate Kotlin bindings to a temp dir
+        run: |
+          TMP=$(mktemp -d)
+          uniffi-bindgen generate \
+            --language kotlin \
+            --out-dir "${TMP}/bindings/kotlin" \
+            target/debug/libyubtc_core.so
+          # -x README.md: the checked-in bindings/kotlin/README.md is
+          # hand-written documentation, not generator output — without
+          # the exclusion `diff -ru` always reports it as drifted and
+          # the job can never pass.
+          diff -ru -x README.md bindings/kotlin "${TMP}/bindings/kotlin" > bindings.diff || true
+          if [ -s bindings.diff ]; then
+            echo "::error::Kotlin bindings are out of sync. Run 'uniffi-bindgen generate' locally and commit."
+            cat bindings.diff
+            exit 1
+          fi
+          echo "Kotlin bindings are in sync."
+
+  unit-tests:
+    name: JVM unit tests
+    # JVM-only test source set for the LockScheduler /
+    # SettingsRepository pair (Phase 9 T3). These tests run on the JVM
+    # with no Android instrumentation; they exercise the wipe-on-lock
+    # scheduling logic and the `idleMinutes` clamp without needing an
+    # emulator. `apk` covers the Compose UI; `unit-tests` covers the
+    # algorithmic side.
+    needs: bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      # The unit test path needs no NDK / SDK manager — pure JVM
+      # against `kotlinx-coroutines-test`. We do still need
+      # `compileSdk` so the Android plugin is happy; pin the same
+      # level the `apk` job uses.
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+
+      # `:app:preBuild` depends on `copyNativeLibs`, which requires
+      # the three per-ABI cdylibs to exist even for a JVM-only test
+      # run (build-gradle wiring, Phase 4). Re-stage them at the
+      # canonical cargo location (`target/<triple>/release/`, same
+      # paths as the `apk` job) — they are already uploaded by
+      # `build-rust` (this job transitively needs it via `bindings`).
+      - name: Stage arm64-v8a cdylib
+        uses: actions/download-artifact@v4
+        with:
+          name: yubtc-android-arm64-v8a
+          path: target/aarch64-linux-android/release/
+
+      - name: Stage armeabi-v7a cdylib
+        uses: actions/download-artifact@v4
+        with:
+          name: yubtc-android-armeabi-v7a
+          path: target/armv7-linux-androideabi/release/
+
+      - name: Stage x86_64 cdylib
+        uses: actions/download-artifact@v4
+        with:
+          name: yubtc-android-x86_64
+          path: target/x86_64-linux-android/release/
+
+      - name: Run :app:test (JVM unit tests)
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+          project-dir: android
+          build-root-directory: android
+          arguments: :app:testDebugUnitTest --no-daemon
+
+  apk:
+    name: Assemble debug + release APKs
+    needs: [build-rust, bindings]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 34
+
+      # Re-stage every per-ABI cdylib at the canonical cargo location
+      # (`target/<triple>/release/` — the workspace-root target dir
+      # `:app:copyNativeLibs` reads). The build-rust matrix runs each
+      # triple on a separate runner, so the artifacts are reassembled
+      # here; downloading straight into the canonical path needs no
+      # further copying. We download each matrix artifact in turn so a
+      # single missing ABI fails the job before Gradle starts.
+      - name: Stage arm64-v8a cdylib
+        uses: actions/download-artifact@v4
+        with:
+          name: yubtc-android-arm64-v8a
+          path: target/aarch64-linux-android/release/
+
+      - name: Stage armeabi-v7a cdylib
+        uses: actions/download-artifact@v4
+        with:
+          name: yubtc-android-armeabi-v7a
+          path: target/armv7-linux-androideabi/release/
+
+      - name: Stage x86_64 cdylib
+        uses: actions/download-artifact@v4
+        with:
+          name: yubtc-android-x86_64
+          path: target/x86_64-linux-android/release/
+
+      # Materialise `android/keystore.properties` from the
+      # `YBTC_KEYSTORE_PROPERTIES` repository secret when it is
+      # configured. The secret is the base64 encoding of the file
+      # contents (see `android/keystore.properties.example`). The
+      # secret is a repo secret (not an environment one), so tag
+      # pushes from this repo always see it; when it is absent
+      # `:app` falls back to the debug keystore — enough for a
+      # smoke build, not enough for distribution.
+      - name: Decode release keystore secret
+        if: ${{ env.YBTC_KEYSTORE_PROPERTIES != '' }}
+        env:
+          YBTC_KEYSTORE_PROPERTIES: ${{ secrets.YBTC_KEYSTORE_PROPERTIES }}
+        run: |
+          mkdir -p android
+          echo "${YBTC_KEYSTORE_PROPERTIES}" | base64 --decode > android/keystore.properties
+          echo "Loaded keystore.properties from secret ($(wc -c < android/keystore.properties) bytes)."
+
+      - name: Assemble debug + release APKs
+        uses: gradle/actions/setup-gradle@v3
+        with:
+          gradle-version: '8.7'
+          project-dir: android
+          build-root-directory: android
+          arguments: assembleDebug assembleRelease
+
+      - name: Upload debug APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yubtc-android-debug
+          path: android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
+      - name: Upload release APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yubtc-android-release
+          path: android/app/build/outputs/apk/release/*.apk
+          if-no-files-found: error
+
+  release:
+    name: release
+    needs: [build-cli, apk]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download CLI artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: cli-*
+          merge-multiple: true
+          path: dist
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: yubtc-android-*
+          path: apks
+      - name: Rename APKs for the release
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          mv apks/yubtc-android-release/*.apk "dist/yubtc-${version}-release.apk"
+          mv apks/yubtc-android-debug/*.apk "dist/yubtc-${version}-debug.apk"
+          ls -l dist
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          prerelease: ${{ contains(github.ref_name, '-') }}

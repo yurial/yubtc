@@ -1,0 +1,59 @@
+[package]
+name = "yubtc-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+description = "Rust core for the yubtc Bitcoin wallet: KDF, key derivation, signing, addresses, WIF."
+
+[lib]
+crate-type = ["cdylib", "staticlib", "rlib"]
+
+# Marker features for Android ABI cross-compilation. They document which
+# ABIs are produced by `.github/workflows/release.yml` and allow downstream
+# callers (e.g. a Gradle plugin or a build script) to enable individual
+# targets. The features themselves are empty — Android targets are selected
+# via `cargo build --target <triple>` (see the workflow), not via features.
+[features]
+default = []
+android-arm64-v8a = []
+android-armeabi-v7a = []
+android-x86_64 = []
+
+[dependencies]
+k256 = { workspace = true }
+sha2 = { workspace = true }
+ripemd = { workspace = true }
+blake2 = { workspace = true }
+sha3 = { workspace = true }
+hmac = { workspace = true }
+pbkdf2 = { workspace = true }
+argon2 = { workspace = true }
+scrypt = { workspace = true }
+bip39 = { workspace = true }
+bitcoin = { workspace = true }
+bip32 = { workspace = true }
+unicode-normalization = { workspace = true }
+digest = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+hex = { workspace = true }
+base58 = { workspace = true }
+thiserror = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+async-trait = "0.1"
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros", "sync"] }
+phf = { version = "0.11", features = ["macros"] }
+uniffi = { workspace = true }
+
+[dev-dependencies]
+proptest = "1.4"
+criterion = { version = "0.5", features = ["html_reports"] }
+wiremock = "0.6"
+serial_test = "3"
+uniffi = { version = "0.32", features = ["bindgen-tests"] }
+ntest_timeout = { workspace = true }

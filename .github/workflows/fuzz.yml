@@ -1,0 +1,69 @@
+# yubtc — Fuzz smoke tests (nightly)
+#
+# Phase 9 T1 wires up the libFuzzer harnesses under
+# `core/fuzz/fuzz_targets/`. Each target exercises a parser that
+# the wallet reaches on adversarial network / file input:
+#
+#   - fuzz_mnemonic  → seed::validate_seed (BIP-39)
+#   - fuzz_hex       → hex::decode (UTXO txid, raw tx hex, address fields)
+#   - fuzz_wif       → address::wif_to_secret (importprivkey path)
+#   - fuzz_raw_tx    → bitcoin::Transaction::consensus_decode
+#   - fuzz_bech32    → bech32::decode/encode + decode_segwit_address
+#                      (Phase 13: `bc1…` addresses on send/receive)
+#   - fuzz_psbt      → psbt::PartiallySignedTransaction::parse
+#                      (Phase 14: coordinator-supplied PSBTs on
+#                      sign/combine/finalize/extract/decode) plus the
+#                      canonical re-encode stability invariants
+#
+# The nightly job runs each target for 60 s (libFuzzer's default
+# per-corpus cap). 60 s × 6 targets is ~6 min wall clock — fine
+# for nightly. Workflow dispatch lets a maintainer kick off a
+# longer run manually.
+#
+# To run locally:
+#
+#   cd core/fuzz
+#   cargo +nightly fuzz run fuzz_wif -- -max_total_time=600
+#
+# Artifacts (corpus, crash inputs) land in `core/fuzz/artifacts/`.
+# Stale crash files are NOT deleted automatically — review and
+# delete them once the underlying bug is fixed, otherwise the
+# next run fails the harness on the old input.
+
+name: fuzz
+
+on:
+  schedule:
+    # nightly 02:07 UTC (off the :00 / :30 marks).
+    - cron: "7 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    name: Fuzz all targets (60 s each)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - name: Install cargo-fuzz
+        run: cargo install cargo-fuzz --locked
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: List fuzz targets
+        # Fail fast if a harness is renamed or removed — surfaces
+        # the mismatch before the 60 s timers waste CI minutes.
+        working-directory: core/fuzz
+        run: |
+          cargo fuzz list
+      - name: Run each fuzz target for 60 s
+        # Per-target step so a crash in one target doesn't mask
+        # the others. `-max_total_time=60` is wall-clock time;
+        # libFuzzer stops cleanly when the timer expires and
+        # exits 0 unless it found a crash.
+        working-directory: core/fuzz
+        run: |
+          set -e
+          for target in fuzz_mnemonic fuzz_hex fuzz_wif fuzz_raw_tx fuzz_bech32 fuzz_psbt; do
+            echo "=== ${target} ==="
+            cargo fuzz run "${target}" -- -max_total_time=60
+          done

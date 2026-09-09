@@ -1,0 +1,85 @@
+[workspace]
+resolver = "2"
+members = [
+    "core",
+    "cli",
+]
+exclude = [
+    # cargo-fuzz manages its own Cargo workspace; keeping it out of
+    # the main workspace prevents `cargo test --workspace` from
+    # trying to compile fuzz harnesses under the stable profile.
+    "core/fuzz",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.75"
+license = "YSAL-1.0"
+authors = ["Yuri Dyachenko <pub.yurial@gmail.com>"]
+repository = "https://github.com/iu-diachenko/yubtc"
+
+[workspace.dependencies]
+# Crypto (pure-Rust, no FFI).
+k256 = { version = "0.13", features = ["ecdsa"] }
+sha2 = "0.10"
+ripemd = "0.1"
+blake2 = "0.10"
+sha3 = "0.10"
+hmac = "0.12"
+pbkdf2 = "0.12"
+argon2 = "0.5"
+scrypt = "0.11"
+bip39 = { version = "2.0", features = ["rand"] }
+
+# Bitcoin protocol.
+bitcoin = "0.31"
+bip32 = { version = "0.5", features = ["secp256k1"] }
+unicode-normalization = "0.1"
+digest = "0.10"
+
+# Encoding / data.
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+hex = "0.4"
+base58 = "0.2"
+
+# Errors.
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Logging.
+tracing = "0.1"
+
+# UniFFI bindings (Kotlin/Swift/Python).
+uniffi = { version = "0.32", features = ["tokio"] }
+uniffi_macros = "0.32"
+
+# Per-test timeout (kills hangs at 5s instead of stalling CI).
+ntest_timeout = { version = "0.9", default-features = false }
+
+# KAT test speedup (v0.3 hygiene): the KAT integration tests
+# (kat_vectors / psbt_vectors / ms_vectors) spend nearly all of their
+# wall time in argon2id / scrypt 64 MiB stretches, which cost ~5.5s
+# each at opt-level 0 (debug). This profile applies only to
+# `cargo test` builds (incl. their dependency graph) — `cargo build`
+# and `release` are untouched. It inherits everything else from `dev`
+# (verified via `cargo test -v`: `-C opt-level=3 -C debuginfo=2
+# -C debug-assertions=on`), so test semantics are unchanged:
+# `cfg(debug_assertions)` code paths (C7 logging policy,
+# cli/src/logging.rs) still compile the debug variant. The KDF crates
+# are pure computation, and the KAT vectors pin their output
+# bit-for-bit, so optimization cannot change test results — measured
+# 40x/33x on the two stretch-heavy suites (kat 396s→10s, psbt
+# 1238s→37s) with a byte-identical llvm-cov summary (18248 lines /
+# 862 branches, 100% both).
+[profile.test]
+opt-level = 3
+
+[profile.release]
+lto = "thin"
+codegen-units = 1
+opt-level = 3
+debug = false
+panic = "abort"
+strip = "symbols"

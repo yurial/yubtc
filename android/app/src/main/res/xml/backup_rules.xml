@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        yubtc deliberately opts out of Android's auto-backup. A wallet seed
+        must never leave the device through Google Backup or any similar
+        channel. The XML declarations are present so the attributes
+        referenced from the manifest (fullBackupContent, dataExtractionRules)
+        resolve, but they are no-ops.
+    -->
+
+    <full-backup-content>
+        <exclude domain="root" />
+        <exclude domain="database" />
+        <exclude domain="sharedpref" />
+        <exclude domain="external" />
+        <exclude domain="file" />
+    </full-backup-content>
+</resources>
