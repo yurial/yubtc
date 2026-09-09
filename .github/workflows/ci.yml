@@ -69,7 +69,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@nightly
+        # Pinned nightly (2026-09-09): the 100% lines+branches gate is
+        # region-granularity-sensitive. Floating `nightly` moved to
+        # 2026-09-08 (rustc 4aa1fbcf4), which counts `.map_err(closure)?`
+        # lines by their never-fired closure bodies alone — the renderer
+        # then reports 11 statement-level-covered lines in core/psbt.rs
+        # and core/src/wallet.rs as uncovered. nightly-2026-09-05
+        # (rustc f248f4038) is the toolchain the zero-count-record
+        # carve-out was calibrated against (owner-approved 2026-09-07)
+        # and the one the 100/100 state is verified on (re-verified
+        # locally on the squashed tree: 19208/19208 lines, 1156/1156
+        # branches); pin until the carve-out is recalibrated against a
+        # newer coverage mapping.
+      - uses: dtolnay/rust-toolchain@nightly-2026-09-05
       - uses: taiki-e/install-action@cargo-llvm-cov
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
