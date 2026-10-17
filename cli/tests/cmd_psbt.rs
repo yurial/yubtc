@@ -60,8 +60,9 @@ fn create_argv(address: &str, amount: &str, extra: &[&str]) -> Vec<String> {
     argv
 }
 
-/// stdin for the offline filters that prompt a seed: seed, passphrase,
-/// PSBT (the `psbt sign` three-line contract).
+/// stdin for the offline filters that prompt a seed: passphrase,
+/// seed, PSBT (the `psbt sign` three-line contract; the passphrase
+/// line comes first — the prompt order).
 ///
 /// The offline fixtures are built around the legacy `yubtc` cascade
 /// KDF (empty passphrase — three hashes per derivation, so the ОВ-9
@@ -81,7 +82,7 @@ fn sign_stdin_pbkdf2(psbt_b64: &str) -> String {
 
 /// [`sign_stdin`] for an arbitrary (seed, passphrase) pair.
 fn sign_stdin_for(seed: &str, passphrase: &str, psbt_b64: &str) -> String {
-    format!("{seed}\n{passphrase}\n{psbt_b64}\n")
+    format!("{passphrase}\n{seed}\n{psbt_b64}\n")
 }
 
 /// stdin for the seedless filters (combine / finalize / extract /
@@ -453,11 +454,11 @@ fn psbt_sign_structural_psbt_error_is_typed() {
 #[test]
 #[ntest_timeout::timeout(30_000)]
 fn psbt_sign_without_psbt_line_is_usage_error() {
-    // Seed + passphrase but no third line (EOF): every filter needs
+    // Passphrase + seed but no third line (EOF): every filter needs
     // exactly one PSBT on stdin.
     yubtc()
         .args(["psbt", "sign"])
-        .write_stdin(format!("{SEED}\n{PASSPHRASE}\n"))
+        .write_stdin(format!("{PASSPHRASE}\n{SEED}\n"))
         .assert()
         .failure()
         .stderr(contains("no PSBT on stdin"));

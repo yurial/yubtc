@@ -3,8 +3,9 @@
 //! Mirrors `yubtc-python/src/yubtc/cli.py:address` (extended by the
 //! Phase 13 `--addr-type` axis):
 //!
-//! - Reads the seed from stdin (one line).
-//! - Reads the passphrase via `rpassword` (no echo).
+//! - Reads the passphrase first (`rpassword`, no echo, on a TTY).
+//! - Reads the seed second (with no echo too when the passphrase is
+//!   empty).
 //! - Resolves `--provider` via `yubtc_core::net::get_backend`.
 //! - Resolves `--kdf` (`auto` → yubtc/pbkdf2 per legacy heuristic) and
 //!   `--addr-type` (`native` default → P2WPKH `bc1q…`).
@@ -12,14 +13,13 @@
 
 use crate::cli::{AddressArgs, KdfName};
 use crate::error::CliError;
-use crate::prompt::{prompt_seed, read_seed_and_passphrase, validate_entered_seed};
+use crate::prompt::{read_seed_and_passphrase, validate_entered_seed};
 use yubtc_core::kdf::KdfAlgo;
 use yubtc_core::misc::{TNonce, TPassphrase, TSeed};
 use yubtc_core::net;
 use yubtc_core::wallet::Wallet;
 
 pub async fn run(args: AddressArgs) -> Result<(), CliError> {
-    prompt_seed()?;
     let (seed, passphrase) = read_seed_and_passphrase()?;
     // Reception-time seed policy (permissive default / opt-in
     // strict BIP-39 + the non-blocking entropy warning), before any

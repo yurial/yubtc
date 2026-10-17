@@ -438,9 +438,9 @@ pub enum PsbtCommand {
     /// inputs, run the fee loop — the `send` path without signing —
     /// and emit base64 on stdout.
     Create(PsbtCreateArgs),
-    /// Sign a PSBT offline (Signer): prompts seed + passphrase, walks
+    /// Sign a PSBT offline (Signer): prompts passphrase + seed, walks
     /// nonces `0..1000` × 3 address forms (ОВ-9) and adds
-    /// `PARTIAL_SIG`s for own inputs. stdin: seed, passphrase, PSBT.
+    /// `PARTIAL_SIG`s for own inputs. stdin: passphrase, seed, PSBT.
     Sign(PsbtSignArgs),
     /// Merge ≥ 2 PSBTs of the same transaction (Combiner): reads one
     /// base64 PSBT per stdin line, merges left-to-right.

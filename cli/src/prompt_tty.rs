@@ -4,49 +4,59 @@
 //! TTY detection, neither of which can be exercised without an
 //! interactive terminal. CI excludes it from llvm-cov measurement via
 //! `--ignore-filename-regex '(^|/)(prompt_tty|tui_term)\.rs$'`; every
-//! testable primitive (line reading, trimming) lives in
-//! [`super`] (`prompt.rs`) and is unit-tested there. Do not move
-//! logic back into this file.
+//! testable primitive (line reading, trimming, prompt order, the
+//! hidden-input selection) lives in [`super`] (`prompt.rs`) and is
+//! unit-tested there. Do not move logic back into this file.
 //!
 //! CI / piped stdin: `rpassword` defaults to `/dev/tty` for both
 //! input and output, which doesn't exist in headless test runners.
-//! When stdin is a TTY we keep the original `rpassword` behaviour (no
-//! echo, `/dev/tty` dance); when stdin is a pipe the passphrase is
-//! the second stdin line (the Python CLI convention).
+//! When stdin is a TTY we keep the original `rpassword` behaviour
+//! (no echo, `/dev/tty` dance); when stdin is a pipe the passphrase
+//! is the first stdin line. The passphrase is prompted BEFORE the
+//! seed, and an empty passphrase hides the seed read as well (no
+//! echo, like a password read, so a bystander cannot see the seed
+//! being typed); a non-empty one keeps the plain echoed line read.
 
 use std::io::{self, IsTerminal};
 
 use yubtc_core::misc::{TPassphrase, TSeed};
 
-use super::{read_passphrase_line, read_seed_from, stdin_err};
 use crate::error::CliError;
 
-/// Read the seed (one line) and the passphrase (no echo) from stdin.
+/// Read the passphrase (no echo) and then the seed from stdin.
 ///
-/// Returns `(seed, passphrase)`. The seed is whitespace-trimmed; on a
-/// TTY the passphrase is read with `rpassword` (no echo, raw bytes),
-/// on a pipe it is the second stdin line with only the trailing
-/// newline stripped. Both are canonicalised by the newtype
+/// Returns `(seed, passphrase)`. The passphrase is read first: on a
+/// TTY with `rpassword` (no echo, raw bytes), on a pipe it is the
+/// first stdin line with only the trailing newline stripped. The
+/// seed comes second — read with no echo as well when the passphrase
+/// is empty, as the plain echoed line otherwise; it is
+/// whitespace-trimmed. Both are canonicalised by the newtype
 /// constructors in `yubtc-core::misc`.
 pub fn read_seed_and_passphrase() -> Result<(TSeed, TPassphrase), CliError> {
+    read_seed_and_passphrase_on(&mut super::prompt_seed)
+}
+
+/// [`read_seed_and_passphrase`] for the stdin→stdout filter commands
+/// (`psbt`, `ms`): the `Seed: ` label goes to stderr so stdout stays
+/// machine-readable.
+pub fn read_seed_and_passphrase_stderr() -> Result<(TSeed, TPassphrase), CliError> {
+    read_seed_and_passphrase_on(&mut super::prompt_seed_stderr)
+}
+
+/// Shared plumbing: lock stdin once and route the no-echo reads
+/// through `rpassword`, delegating the prompt order and the
+/// hidden-input selection to the testable orchestration in
+/// [`super`].
+fn read_seed_and_passphrase_on(
+    print_seed_label: &mut dyn FnMut() -> Result<(), CliError>,
+) -> Result<(TSeed, TPassphrase), CliError> {
     let stdin = io::stdin();
+    let is_tty = stdin.is_terminal();
     let mut handle = stdin.lock();
 
-    let seed = read_seed_from(&mut handle)?;
+    // rpassword opens /dev/tty directly — there's no FD-0 contention
+    // with the stdin lock we are holding.
+    let mut read_hidden = |label: &str| rpassword::prompt_password(label);
 
-    // Passphrase read: TTY → rpassword handles the /dev/tty dance
-    // and no-echo input. Pipe → second line on stdin.
-    let passphrase_str = if stdin.is_terminal() {
-        // We're holding the lock, but rpassword opens /dev/tty
-        // directly — there's no FD-0 contention. Drop the lock first
-        // to avoid the rare case where rpassword's internal lock
-        // ordering disagrees with ours.
-        drop(handle);
-        rpassword::prompt_password("Passphrase: ").map_err(stdin_err)?
-    } else {
-        read_passphrase_line(&mut handle)?
-    };
-    let passphrase = TPassphrase::new(passphrase_str);
-
-    Ok((seed, passphrase))
+    super::read_seed_and_passphrase_from(&mut handle, is_tty, &mut read_hidden, print_seed_label)
 }

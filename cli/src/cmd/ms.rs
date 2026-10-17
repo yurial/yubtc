@@ -36,7 +36,7 @@ use yubtc_core::wallet::MsForm;
 
 use crate::cli::{KdfName, MsCommand, MsCreateArgs, MsSendArgs};
 use crate::error::CliError;
-use crate::prompt::{prompt_seed_stderr, read_seed_and_passphrase, validate_entered_seed};
+use crate::prompt::{read_seed_and_passphrase_stderr, validate_entered_seed};
 
 use super::address::resolve_kdf;
 
@@ -151,21 +151,21 @@ fn require_nonce_for_wifs(nonce: Option<u32>, wifs: &[String]) -> Result<(), Cli
 }
 
 /// The shared preamble of every `ms` invocation that participates in
-/// the quorum: prompt the seed (stderr — stdout stays payload-only),
-/// validate reception (permissive default / opt-in strict, R-1…R-6),
-/// resolve the `auto` KDF (the ms surface has no `--kdf`, mirroring
-/// the `psbt` grammar), derive the own legacy-form key at `nonce`
-/// (R-MS-6/ОВ-10) and verify every WIF candidate against it (any
-/// mismatch — including every foreign WIF — is `MsError::ForeignWif`,
-/// ОВ-11). Returns the seed material (re-passed to the Creator by
-/// `ms send`) and the own compressed pubkey (the quorum member).
+/// the quorum: prompt the passphrase and the seed (stderr — stdout
+/// stays payload-only), validate reception (permissive default /
+/// opt-in strict, R-1…R-6), resolve the `auto` KDF (the ms surface
+/// has no `--kdf`, mirroring the `psbt` grammar), derive the own
+/// legacy-form key at `nonce` (R-MS-6/ОВ-10) and verify every WIF
+/// candidate against it (any mismatch — including every foreign
+/// WIF — is `MsError::ForeignWif`, ОВ-11). Returns the seed material
+/// (re-passed to the Creator by `ms send`) and the own compressed
+/// pubkey (the quorum member).
 fn enter_own_key(
     nonce: u32,
     wifs: &[String],
     strict_bip39: bool,
 ) -> Result<(TSeed, TPassphrase, KdfAlgo, [u8; 33]), CliError> {
-    prompt_seed_stderr()?;
-    let (seed, passphrase) = read_seed_and_passphrase()?;
+    let (seed, passphrase) = read_seed_and_passphrase_stderr()?;
     validate_entered_seed(&seed, strict_bip39)?;
     let kdf = resolve_kdf(KdfName::Auto, &passphrase);
     let derived = yubtc_core::wallet::ms_own_privkey(&seed, TNonce::new(nonce), &passphrase, kdf)?;

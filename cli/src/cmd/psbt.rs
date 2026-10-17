@@ -9,7 +9,7 @@
 //!   (`WITNESS_UTXO` for witness forms, `NON_WITNESS_UTXO` fetched via
 //!   `NetworkBackend::raw_transaction` for legacy P2PKH). The only
 //!   online subcommand.
-//! - `sign` — Signer: fully offline; prompts seed + passphrase
+//! - `sign` — Signer: fully offline; prompts passphrase + seed
 //!   (stdin lines 1–2, PSBT on line 3), walks nonces
 //!   `0..PSBT_SIGN_MAX_NONCE` × 3 address forms (ОВ-9) and adds
 //!   `PARTIAL_SIG`s for own inputs (BIP-174 MUST: everything else is
@@ -32,9 +32,7 @@ use std::io::{self, BufRead, Read};
 
 use crate::cli::{KdfName, PsbtCommand, PsbtCreateArgs, PsbtSignArgs};
 use crate::error::CliError;
-use crate::prompt::{
-    prompt_seed_stderr, read_seed_and_passphrase, stdin_err, validate_entered_seed,
-};
+use crate::prompt::{read_seed_and_passphrase_stderr, stdin_err, validate_entered_seed};
 use yubtc_core::misc::{TAddress, TNonce, TSatoshi};
 use yubtc_core::net;
 use yubtc_core::psbt::{CreateInput, PartiallySignedTransaction};
@@ -75,8 +73,7 @@ async fn create(args: PsbtCreateArgs) -> Result<(), CliError> {
     super::reject_p2wsh_recipient(&TAddress::new(args.address.clone()))?;
     // The seed prompt goes to stderr: stdout carries exactly one
     // payload line (the base64 PSBT) per the filter contract.
-    prompt_seed_stderr()?;
-    let (seed, passphrase) = read_seed_and_passphrase()?;
+    let (seed, passphrase) = read_seed_and_passphrase_stderr()?;
     // Reception-time seed policy (permissive default / opt-in strict
     // BIP-39 + the non-blocking entropy warning), before any KDF work
     // (specs/spec.md «Seed policy», R-1…R-6).
@@ -276,15 +273,15 @@ async fn present_built(backend: &dyn net::NetworkBackend, built: BuiltTx) -> Res
 
 // --- sign ------------------------------------------------------------
 
-/// `psbt sign` — offline Signer. stdin: seed, passphrase, PSBT
-/// (three lines; the passphrase follows the Python CLI pipe
-/// convention, the PSBT is read after the prompt helpers release the
-/// stdin lock). On a TTY the passphrase is read with `rpassword`.
+/// `psbt sign` — offline Signer. stdin: passphrase, seed, PSBT
+/// (three lines; the passphrase is read before the seed so an empty
+/// passphrase can hide the seed read, the PSBT is read after the
+/// prompt helpers release the stdin lock). On a TTY the passphrase
+/// is read with `rpassword`.
 fn sign(args: PsbtSignArgs) -> Result<(), CliError> {
     // The seed prompt goes to stderr: stdout carries exactly one
     // payload line (the base64 PSBT) per the filter contract.
-    prompt_seed_stderr()?;
-    let (seed, passphrase) = read_seed_and_passphrase()?;
+    let (seed, passphrase) = read_seed_and_passphrase_stderr()?;
     validate_entered_seed(&seed, args.seed_policy.strict_bip39)?;
     // No `--kdf` on the psbt surface (spec ОВ-6 grammar): `auto`.
     let kdf = resolve_kdf(KdfName::Auto, &passphrase);

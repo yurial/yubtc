@@ -2,7 +2,7 @@
 //!
 //! Mirrors `yubtc-python/src/yubtc/cli.py:balance`:
 //!
-//! - Reads seed + passphrase from stdin.
+//! - Reads passphrase + seed from stdin (passphrase first).
 //! - Iterates the wallet's scanned addresses, fetching unspent outputs
 //!   via the current backend.
 //! - Prints `{nonce}# {address}: {amount} BTC` per address, then
@@ -12,14 +12,13 @@
 
 use crate::cli::BalanceArgs;
 use crate::error::CliError;
-use crate::prompt::{prompt_seed, read_seed_and_passphrase, validate_entered_seed};
+use crate::prompt::{read_seed_and_passphrase, validate_entered_seed};
 use yubtc_core::misc::{satoshi2btc, TNonce, TSatoshi};
 use yubtc_core::net;
 
 use super::address::resolve_kdf;
 
 pub async fn run(args: BalanceArgs) -> Result<(), CliError> {
-    prompt_seed()?;
     let (seed, passphrase) = read_seed_and_passphrase()?;
     // Reception-time seed policy (permissive default / opt-in
     // strict BIP-39 + the non-blocking entropy warning), before any

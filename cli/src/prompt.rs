@@ -4,7 +4,11 @@
 //! unit-testable with in-memory readers ([`std::io::Cursor`]): seed
 //! reading (whitespace-trimmed) and piped-passphrase reading
 //! (only the trailing newline is stripped, inner/leading whitespace
-//! preserved).
+//! preserved), plus the shared entry orchestration
+//! ([`read_seed_and_passphrase_from`]): the passphrase is read
+//! FIRST, then the seed — and an empty passphrase hides the seed
+//! read as well (no echo, like a password read, so a bystander
+//! cannot see the seed being typed).
 //!
 //! The terminal dispatch ([`read_seed_and_passphrase`]) lives in
 //! `prompt_tty.rs` — the `rpassword` / TTY-detection branch cannot be
@@ -13,9 +17,12 @@
 //! It is re-exported here so command modules can keep importing
 //! `crate::prompt::read_seed_and_passphrase`.
 //!
-//! Behaviour mirrors `yubtc-python/src/yubtc/seed.py:get_seed_and_passphrase`:
-//! the seed is whitespace-trimmed; the passphrase is read raw
-//! (whitespace preserved) and treated as `""` when empty.
+//! The seed/passphrase handling mirrors
+//! `yubtc-python/src/yubtc/seed.py:get_seed_and_passphrase` except
+//! for the prompt order (the passphrase comes first here) and the
+//! hidden seed read on an empty passphrase: the seed is
+//! whitespace-trimmed; the passphrase is read raw (whitespace
+//! preserved) and treated as `""` when empty.
 //!
 //! Reception-time seed validation ([`validate_entered_seed`]) also
 //! lives here: every command that accepts a seed from the user calls
@@ -28,7 +35,7 @@
 
 use std::io::{self, BufRead, Write};
 
-use yubtc_core::misc::TSeed;
+use yubtc_core::misc::{TPassphrase, TSeed};
 
 use crate::error::CliError;
 
@@ -37,7 +44,7 @@ use crate::error::CliError;
 #[path = "prompt_tty.rs"]
 mod prompt_tty;
 
-pub use prompt_tty::read_seed_and_passphrase;
+pub use prompt_tty::{read_seed_and_passphrase, read_seed_and_passphrase_stderr};
 
 /// Label [`prompt_seed`] writes before the seed read. A separate const
 /// so tests can pin the exact prompt text without capturing stdout
@@ -58,6 +65,11 @@ pub(crate) fn stdin_err(e: io::Error) -> CliError {
 /// so tests can pin the exact prompt text without capturing stdout
 /// (a piped shell `read` sees this exact byte string).
 pub(crate) const SEED_PROMPT: &str = "Seed: ";
+
+/// Label the no-echo read prints before the passphrase (a terminal
+/// sees this exact byte string from `rpassword`). A separate const so
+/// tests can pin the exact prompt text.
+pub(crate) const PASSPHRASE_PROMPT: &str = "Passphrase: ";
 
 /// Print `Seed: ` to stdout (no newline) and flush, so a piped `read`
 /// sees the prompt. Used when the user is expected to paste a seed
@@ -176,19 +188,80 @@ pub(crate) fn read_passphrase_line(handle: &mut dyn BufRead) -> Result<String, C
         .to_string())
 }
 
+/// The no-echo reader injected by the terminal dispatch: print
+/// `label` (no trailing newline) and read one secret line without
+/// echo. On a real terminal this is `rpassword::prompt_password`;
+/// tests substitute an in-memory fake.
+pub(crate) type ReadHidden<'a> = &'a mut dyn FnMut(&str) -> io::Result<String>;
+
+/// Read the passphrase FIRST, then the seed — the shared entry
+/// orchestration behind [`read_seed_and_passphrase`], split out so
+/// the prompt order and the hidden-input selection are unit-testable
+/// with in-memory readers.
+///
+/// Contract: `handle` is the piped stdin source; `stdin_is_tty`
+/// reports the terminal state; `read_hidden` performs the no-echo
+/// reads (`rpassword` on a real terminal); `print_seed_label` writes
+/// the [`SEED_PROMPT`] label right before an echoed seed read (to
+/// stdout for the interactive commands, to stderr for the `psbt`/`ms`
+/// stdin→stdout filters).
+///
+/// The passphrase is always read first: on a TTY via `read_hidden`
+/// (no echo), on a pipe it is the first stdin line (raw bytes, only
+/// the trailing newline stripped). The seed comes second: when the
+/// passphrase is empty AND stdin is a TTY, the seed is read hidden as
+/// well (a bystander must not see the seed being typed); a non-empty
+/// passphrase keeps the plain echoed line read, and on a pipe there
+/// is no echo, so the seed is the next stdin line either way — the
+/// `Seed: ` label is printed before it. The seed is whitespace-trimmed
+/// in both paths; the passphrase keeps its bytes verbatim. Returns
+/// [`CliError::Stdin`] when any underlying read fails (I/O error or
+/// invalid UTF-8) or when the label cannot be written.
+pub(crate) fn read_seed_and_passphrase_from(
+    handle: &mut dyn BufRead,
+    stdin_is_tty: bool,
+    read_hidden: ReadHidden<'_>,
+    print_seed_label: &mut dyn FnMut() -> Result<(), CliError>,
+) -> Result<(TSeed, TPassphrase), CliError> {
+    // Passphrase first: TTY → no-echo read; pipe → first stdin line.
+    let passphrase = TPassphrase::new(if stdin_is_tty {
+        read_hidden(PASSPHRASE_PROMPT).map_err(stdin_err)?
+    } else {
+        read_passphrase_line(handle)?
+    });
+
+    // Seed second. An empty passphrase hides the seed too (like a
+    // password read); a non-empty one keeps the echoed line read,
+    // with the label printed so a piped shell `read` sees the prompt.
+    let seed = if stdin_is_tty && passphrase.is_empty() {
+        TSeed::new(
+            read_hidden(SEED_PROMPT)
+                .map_err(stdin_err)?
+                .trim()
+                .to_string(),
+        )
+    } else {
+        print_seed_label()?;
+        read_seed_from(handle)?
+    };
+
+    Ok((seed, passphrase))
+}
+
 #[cfg(test)]
 mod tests {
     //! In-memory (Cursor) tests for the stdin-line primitives.
     #![allow(unexpected_cfgs)] // llvm-cov passes `--cfg coverage`; Cargo doesn't declare it
 
-    use std::io::Cursor;
+    use std::cell::{Cell, RefCell};
+    use std::io::{self, Cursor};
 
     use crate::error::CliError;
     use yubtc_core::misc::TSeed;
 
     use super::{
-        prompt_seed, read_passphrase_line, read_seed, read_seed_from, read_trimmed_line,
-        validate_entered_seed, SEED_PROMPT,
+        prompt_seed, read_passphrase_line, read_seed, read_seed_and_passphrase_from,
+        read_seed_from, read_trimmed_line, validate_entered_seed, PASSPHRASE_PROMPT, SEED_PROMPT,
     };
 
     // --- read_trimmed_line -------------------------------------------
@@ -294,7 +367,34 @@ mod tests {
         assert!(err.to_string().starts_with("stdin: "), "{err}");
     }
 
-    // --- prompt_seed ---------------------------------------------------
+    // --- read_seed_and_passphrase_from -------------------------------
+
+    /// In-memory no-echo reader: records the labels it is called with
+    /// and answers each call with the next line of `answers`
+    /// (panicking past the end, which would mean an unexpected extra
+    /// hidden read).
+    fn fake_hidden<'a>(
+        labels: &'a RefCell<Vec<String>>,
+        answers: &'a [&'a str],
+    ) -> impl FnMut(&str) -> io::Result<String> + 'a {
+        let mut idx = 0;
+        move |label: &str| {
+            labels.borrow_mut().push(label.to_string());
+            let answer = answers
+                .get(idx)
+                .expect("fake hidden reader consulted more times than scripted");
+            idx += 1;
+            Ok((*answer).to_string())
+        }
+    }
+
+    /// Label-printer recording its call count in `count`.
+    fn counting_label(count: &Cell<usize>) -> impl FnMut() -> Result<(), CliError> + '_ {
+        move || {
+            count.set(count.get() + 1);
+            Ok(())
+        }
+    }
 
     #[test]
     fn seed_prompt_label_is_stable() {
@@ -302,6 +402,133 @@ mod tests {
         // CLI print the same label.
         assert_eq!(SEED_PROMPT, "Seed: ");
     }
+
+    #[test]
+    fn passphrase_prompt_label_is_stable() {
+        // Pinned byte-for-byte: rpassword prints this on a TTY.
+        assert_eq!(PASSPHRASE_PROMPT, "Passphrase: ");
+    }
+
+    #[test]
+    fn entry_reads_passphrase_line_before_the_seed_line() {
+        // Piped stdin: the FIRST line is the passphrase, the SECOND
+        // the seed (the new prompt order). The `Seed: ` label is
+        // printed before the echoed seed read; no no-echo read
+        // happens on a pipe.
+        let mut cur = Cursor::new(b"p1\ns1\n".to_vec());
+        let labels = RefCell::new(Vec::new());
+        let mut hidden = fake_hidden(&labels, &[]);
+        let prints = Cell::new(0);
+        let mut print_label = counting_label(&prints);
+
+        let (seed, passphrase) =
+            read_seed_and_passphrase_from(&mut cur, false, &mut hidden, &mut print_label)
+                .expect("read");
+        assert_eq!(passphrase.as_str(), "p1");
+        assert_eq!(seed.as_str(), "s1");
+        assert_eq!(prints.get(), 1, "the Seed: label precedes the seed read");
+        assert!(labels.borrow().is_empty(), "no no-echo read on a pipe");
+    }
+
+    #[test]
+    fn entry_piped_empty_passphrase_keeps_seed_on_stdin() {
+        // Empty passphrase on a pipe: no echo concept exists there, so
+        // the seed stays the next stdin line (line 1 empty, line 2 the
+        // seed) — and the no-echo reader is never consulted.
+        let mut cur = Cursor::new(b"\ns1\n".to_vec());
+        let labels = RefCell::new(Vec::new());
+        let mut hidden = fake_hidden(&labels, &[]);
+        let prints = Cell::new(0);
+        let mut print_label = counting_label(&prints);
+
+        let (seed, passphrase) =
+            read_seed_and_passphrase_from(&mut cur, false, &mut hidden, &mut print_label)
+                .expect("read");
+        assert_eq!(passphrase.as_str(), "");
+        assert_eq!(seed.as_str(), "s1");
+        assert_eq!(prints.get(), 1);
+        assert!(labels.borrow().is_empty(), "no no-echo read on a pipe");
+    }
+
+    #[test]
+    fn entry_tty_empty_passphrase_hides_the_seed_read() {
+        // TTY + empty passphrase: the seed is read through the no-echo
+        // reader (label order pins the prompt order: Passphrase:
+        // first, Seed: second), the piped stdin line is never
+        // consumed, and the echoed-read label is not printed.
+        let mut cur = Cursor::new(b"echoed\n".to_vec());
+        let labels = RefCell::new(Vec::new());
+        let mut hidden = fake_hidden(&labels, &["", "zoo zoo zoo"]);
+        let prints = Cell::new(0);
+        let mut print_label = counting_label(&prints);
+
+        let (seed, passphrase) =
+            read_seed_and_passphrase_from(&mut cur, true, &mut hidden, &mut print_label)
+                .expect("read");
+        assert_eq!(passphrase.as_str(), "");
+        assert_eq!(seed.as_str(), "zoo zoo zoo");
+        assert_eq!(
+            *labels.borrow(),
+            vec![PASSPHRASE_PROMPT.to_string(), SEED_PROMPT.to_string()],
+            "passphrase is prompted first, the hidden seed second"
+        );
+        assert_eq!(prints.get(), 0, "no echoed read → no Seed: label");
+        assert_eq!(cur.position(), 0, "stdin is left untouched");
+    }
+
+    #[test]
+    fn entry_tty_non_empty_passphrase_keeps_echoed_seed_read() {
+        // TTY + non-empty passphrase: the passphrase is still the
+        // no-echo read, but the seed keeps the plain echoed line read
+        // (label printed, seed taken from stdin).
+        let mut cur = Cursor::new(b"echoed seed\n".to_vec());
+        let labels = RefCell::new(Vec::new());
+        let mut hidden = fake_hidden(&labels, &["pw"]);
+        let prints = Cell::new(0);
+        let mut print_label = counting_label(&prints);
+
+        let (seed, passphrase) =
+            read_seed_and_passphrase_from(&mut cur, true, &mut hidden, &mut print_label)
+                .expect("read");
+        assert_eq!(passphrase.as_str(), "pw");
+        assert_eq!(seed.as_str(), "echoed seed");
+        assert_eq!(*labels.borrow(), vec![PASSPHRASE_PROMPT.to_string()]);
+        assert_eq!(prints.get(), 1);
+    }
+
+    #[test]
+    fn entry_hidden_seed_read_is_whitespace_trimmed() {
+        // The hidden seed path trims like the echoed one (BIP-39
+        // phrases are whitespace-insensitive; rpassword strips only
+        // the trailing newline).
+        let mut cur = Cursor::new(Vec::new());
+        let labels = RefCell::new(Vec::new());
+        let mut hidden = fake_hidden(&labels, &["", "  zoo zoo zoo  "]);
+        let prints = Cell::new(0);
+        let mut print_label = counting_label(&prints);
+
+        let (seed, passphrase) =
+            read_seed_and_passphrase_from(&mut cur, true, &mut hidden, &mut print_label)
+                .expect("read");
+        assert_eq!(passphrase.as_str(), "");
+        assert_eq!(seed.as_str(), "zoo zoo zoo");
+    }
+
+    #[test]
+    fn entry_tty_hidden_read_error_is_stdin_error() {
+        // A failing no-echo read (rpassword plumbing) maps to
+        // CliError::Stdin like every other stdin error.
+        let mut cur = Cursor::new(Vec::new());
+        let mut hidden = |_: &str| Err(io::Error::other("tty gone"));
+        let prints = Cell::new(0);
+        let mut print_label = counting_label(&prints);
+
+        let err = read_seed_and_passphrase_from(&mut cur, true, &mut hidden, &mut print_label)
+            .expect_err("no-echo read failure must error");
+        assert!(err.to_string().starts_with("stdin: "), "{err}");
+    }
+
+    // --- prompt_seed ---------------------------------------------------
 
     #[test]
     fn prompt_seed_writes_label_and_flushes() {

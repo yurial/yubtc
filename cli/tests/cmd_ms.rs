@@ -44,10 +44,11 @@ fn yubtc() -> Command {
     Command::new(env!("CARGO_BIN_EXE_yubtc"))
 }
 
-/// stdin for the `-n` flows: seed line, empty-passphrase line (the
-/// cascade route).
+/// stdin for the `-n` flows: empty-passphrase line (the cascade
+/// route), then the seed line — the passphrase line comes first (the
+/// prompt order).
 fn ms_stdin() -> String {
-    format!("{MS_SEED}\n\n")
+    format!("\n{MS_SEED}\n")
 }
 
 /// Cascade fixture pubkey of `seed` at `nonce` — the own key is
@@ -665,7 +666,7 @@ async fn ms_send_e2e_full_pipeline_to_a_spendable_multisig_tx() {
     // nonce-0 key among the redeem members).
     let signed_b64 = yubtc()
         .args(["psbt", "sign"])
-        .write_stdin(format!("{MS_SEED_B}\n\n{psbt_b64}\n"))
+        .write_stdin(format!("\n{MS_SEED_B}\n{psbt_b64}\n"))
         .assert()
         .success()
         .get_output()
@@ -942,7 +943,7 @@ fn ms_create_p2wsh_form_prints_the_witness_address() {
     // derivation for the witness form.
     let k1 = hex::encode(fixture_pubkey(MS_SEED, 1));
     let k2 = hex::encode(fixture_pubkey(MS_SEED, 2));
-    let stdin = format!("{MS_SEED}\n\n");
+    let stdin = format!("\n{MS_SEED}\n");
     let argv = [
         "ms", "create", "3", "2", "--form", "p2wsh", "--key", &k1, "--key", &k2, "-n", "0",
     ];
@@ -1006,7 +1007,7 @@ fn ms_create_p2tr_form_prints_the_tapscript_address_and_witness_material() {
     // control (the 33-byte BIP-341 control block, 66 hex chars).
     let k1 = xonly_hex(&fixture_pubkey(MS_SEED, 1));
     let k2 = xonly_hex(&fixture_pubkey(MS_SEED, 2));
-    let stdin = format!("{MS_SEED}\n\n");
+    let stdin = format!("\n{MS_SEED}\n");
     let argv = [
         "ms", "create", "3", "2", "--form", "p2tr", "--key", &k1, "--key", &k2, "-n", "0",
     ];
@@ -1278,7 +1279,7 @@ async fn ms_send_p2tr_e2e_full_pipeline_to_a_spendable_tapscript_tx() {
     let signed_b64 = String::from_utf8(
         yubtc()
             .args(["psbt", "sign"])
-            .write_stdin(format!("{MS_SEED_B}\n\n{psbt_b64}\n"))
+            .write_stdin(format!("\n{MS_SEED_B}\n{psbt_b64}\n"))
             .assert()
             .success()
             .get_output()

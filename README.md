@@ -72,7 +72,7 @@ The same commands run in CI (`.github/workflows/ci.yml`).
 cd cli && cargo build --release
 ./target/release/yubtc --help
 ./target/release/yubtc newseed
-./target/release/yubtc address   # prompts: seed, passphrase
+./target/release/yubtc address   # prompts: passphrase, seed
 ./target/release/yubtc send 1BoatSLRHtKNngkdXEeobR76b53LETtpyT 0.001 --broadcast
 ```
 
