@@ -2,7 +2,7 @@
 //!
 //! Mirrors `yubtc-python/src/yubtc/cli.py:send`:
 //!
-//! - Reads seed + passphrase from stdin.
+//! - Reads passphrase + seed from stdin (passphrase first).
 //! - Resolves `--provider` / `--kdf`.
 //! - If `-i` is set, opens the Coin Control TUI to pick inputs.
 //! - Otherwise performs a lazy scan to gap-limit (or until the
@@ -15,7 +15,7 @@
 
 use crate::cli::SendArgs;
 use crate::error::CliError;
-use crate::prompt::{prompt_seed, read_seed_and_passphrase, validate_entered_seed};
+use crate::prompt::{read_seed_and_passphrase, validate_entered_seed};
 use yubtc_core::misc::{TAddress, TNonce, TSatoshi};
 use yubtc_core::net;
 
@@ -28,7 +28,6 @@ pub async fn run(args: SendArgs) -> Result<(), CliError> {
     // surface only — personal sends keep the typed refusal).
     // Checked first: the address is a pure argument, no I/O needed.
     super::reject_p2wsh_recipient(&TAddress::new(args.address.clone()))?;
-    prompt_seed()?;
     let (seed, passphrase) = read_seed_and_passphrase()?;
     // Reception-time seed policy (permissive default / opt-in
     // strict BIP-39 + the non-blocking entropy warning), before any

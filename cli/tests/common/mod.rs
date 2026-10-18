@@ -57,20 +57,21 @@ pub const LOW_ENTROPY_SEED: &str =
 /// fires (non-blocking).
 pub const ARBITRARY_PHRASE: &str = "not a real mnemonic";
 
-/// The two stdin lines the commands read when piped: seed, passphrase.
+/// The two stdin lines the commands read when piped: passphrase,
+/// seed (the passphrase line comes first — the prompt order).
 pub fn stdin_seed_pass() -> String {
-    format!("{SEED}\n{PASSPHRASE}\n")
+    format!("{PASSPHRASE}\n{SEED}\n")
 }
 
-/// stdin lines for an arbitrary seed: seed, passphrase.
+/// stdin lines for an arbitrary seed: passphrase, seed.
 pub fn stdin_seed_pass_for(seed: &str) -> String {
-    format!("{seed}\n{PASSPHRASE}\n")
+    format!("{PASSPHRASE}\n{seed}\n")
 }
 
 /// stdin lines with the low-entropy seed: rejected at reception in
 /// strict mode (`--strict-bip39`), accepted permissively.
 pub fn stdin_low_entropy_seed_pass() -> String {
-    format!("{LOW_ENTROPY_SEED}\n{PASSPHRASE}\n")
+    format!("{PASSPHRASE}\n{LOW_ENTROPY_SEED}\n")
 }
 
 /// Fixture address at `nonce` for `(SEED, PASSPHRASE, pbkdf2)` in the

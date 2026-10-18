@@ -92,10 +92,10 @@ fn help_lists_retries_and_auto_provider() {
 
 #[test]
 fn provider_auto_and_retries_zero_are_accepted() {
-    // Parse-level acceptance: `balance` prompts for the seed BEFORE
-    // resolving the backend, so an empty stdin fails cleanly at the
-    // seed prompt (exit 1) — proving clap accepted `auto` and
-    // `--retries 0` without touching any network.
+    // Parse-level acceptance: `balance` prompts for the passphrase
+    // and the seed BEFORE resolving the backend, so an empty stdin
+    // fails cleanly at the seed read (exit 1) — proving clap accepted
+    // `auto` and `--retries 0` without touching any network.
     yubtc()
         .args(["balance", "--provider", "auto", "--retries", "0"])
         .write_stdin("")

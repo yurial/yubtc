@@ -2,20 +2,20 @@
 //!
 //! Mirrors `yubtc-python/src/yubtc/cli.py:dumpprivkey`:
 //!
-//! - Reads the seed from stdin (one line).
-//! - Reads the passphrase via `rpassword` (no echo).
+//! - Reads the passphrase first (`rpassword`, no echo, on a TTY).
+//! - Reads the seed second (with no echo too when the passphrase is
+//!   empty).
 //! - Prints the address then the WIF (two lines).
 
 use crate::cli::DumpprivkeyArgs;
 use crate::error::CliError;
-use crate::prompt::{prompt_seed, read_seed_and_passphrase, validate_entered_seed};
+use crate::prompt::{read_seed_and_passphrase, validate_entered_seed};
 use yubtc_core::misc::TNonce;
 use yubtc_core::net;
 
 use super::address::resolve_kdf;
 
 pub async fn run(args: DumpprivkeyArgs) -> Result<(), CliError> {
-    prompt_seed()?;
     let (seed, passphrase) = read_seed_and_passphrase()?;
     // Reception-time seed policy (permissive default / opt-in
     // strict BIP-39 + the non-blocking entropy warning), before any

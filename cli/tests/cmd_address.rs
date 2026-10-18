@@ -263,7 +263,8 @@ fn address_yubtc_kdf_with_passphrase_is_wallet_error() {
 }
 
 /// Auto KDF with an empty passphrase line picks the yubtc cascade
-/// and still succeeds (second line blank).
+/// and still succeeds (first line blank — the passphrase line comes
+/// first).
 #[tokio::test]
 #[ntest_timeout::timeout(30_000)]
 async fn address_auto_kdf_empty_passphrase_uses_yubtc() {
@@ -306,7 +307,7 @@ async fn address_auto_kdf_empty_passphrase_uses_yubtc() {
     let out = yubtc()
         .env("YUBTC_MOCK_BACKEND_URL", server.uri())
         .args(["address", "--provider", "mock"])
-        .write_stdin(format!("{SEED}\n\n"))
+        .write_stdin(format!("\n{SEED}\n"))
         .assert()
         .success()
         .get_output()
