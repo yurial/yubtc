@@ -121,17 +121,26 @@ Default: `wipeOnIdle = true`, `idleMinutes = 5`. Настройка в
 Все экраны лежат в `ui/screens/`, принимают колбэки + state и
 полностью stateless относительно VM. Один файл — один `@Composable`.
 
-### passphrase (`PassphraseScreen.kt:73`)
+### passphrase (`PassphraseScreen.kt:91`)
 
 Первый экран на cold launch. Locked-состояние.
 
+Поля идут в порядке CLI-промпта (c4233d3): passphrase — первым,
+seed — вторым.
+
 **Элементы:**
 - Заголовок `yubtc` + подсказка «Enter your BIP-39 seed and passphrase».
+- `OutlinedTextField` passphrase — первое поле (single-line,
+  `PasswordVisualTransformation`, `KeyboardType.Password`).
+  Passphrase намеренно не тримится — BIP-39 допускает пробелы в
+  начале/конце.
 - `OutlinedTextField` seed (multi-line, без auto-correct, без trim при
-  unlock — `seed.trim()` в unlock-кнопке).
-- `OutlinedTextField` passphrase (single-line, `PasswordVisualTransformation`,
-  `KeyboardType.Password`). Passphrase намеренно не тримится — BIP-39
-  допускает пробелы в начале/конце.
+  unlock — `seed.trim()` в unlock-кнопке). Маскирование условное
+  (`seedFieldMasked`, зеркалит скрытое чтение seed в CLI): пустой
+  passphrase → ввод seed скрыт (`PasswordVisualTransformation`);
+  непустой passphrase → seed показан открытым текстом. Раскладка
+  клавиатуры от правила не зависит — многострочный ввод мнемоники
+  сохранён в обоих режимах.
 - Row кнопок `Unlock` (enabled когда `seed.isNotBlank()`) + `Generate`.
 - `Card` с превью сгенерированного seed (когда `generatedSeed != null`):
   три кнопки `Copy` (clipboard), `Use` (заполняет поле seed), `Dismiss`.
@@ -153,6 +162,10 @@ Default: `wipeOnIdle = true`, `idleMinutes = 5`. Настройка в
 **Контракт:**
 - Seed не персистится; пустой passphrase → legacy `Yubtc` KDF
   (bit-for-bit совместим со старыми seed'ами).
+- Маскирование seed — чисто экранный стейт: и passphrase, и seed
+  живут в локальном `remember`-стейте `PassphraseScreen`, правило
+  `seedFieldMasked(passphrase)` читает только строку поля; VM,
+  `YubtcState` и навигация о нём не знают.
 - Режим приёма seed: permissive по умолчанию (любая непустая фраза,
   R-1 spec.md); `strictBip39 = true` добавляет блокирующий BIP-39
   parse + entropy floor (R-4), ошибка — в `state.errorMessage`.

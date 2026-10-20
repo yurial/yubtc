@@ -32,22 +32,31 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 
 /**
  * Seed + passphrase entry. The first screen the user sees on cold
  * launch.
  *
+ * The two fields follow the CLI prompt order — passphrase first,
+ * seed second.
+ *
  * Behaviour:
  *
- * - The seed field accepts a BIP-39 mnemonic (12 / 15 / 18 / 21 / 24
- *   words separated by single spaces). Validation runs in the
- *   UniFFI core on `unlock`; an invalid seed surfaces the error in
- *   [errorMessage].
  * - The passphrase is entered once and never displayed (masked with
  *   `PasswordVisualTransformation`). Empty passphrase keeps the
  *   legacy `Yubtc` KDF path — bit-for-bit compatible with seeds
  *   generated before BIP-39 passphrase support was added.
+ * - The seed field accepts a BIP-39 mnemonic (12 / 15 / 18 / 21 / 24
+ *   words separated by single spaces). Validation runs in the
+ *   UniFFI core on `unlock`; an invalid seed surfaces the error in
+ *   [errorMessage]. Mirroring the CLI's hidden seed read, the field
+ *   is masked while the passphrase is empty ([seedFieldMasked]
+ *   drives `PasswordVisualTransformation`); once a non-empty
+ *   passphrase is entered, the seed is shown in plain text. The
+ *   keyboard options are unchanged either way — multi-line mnemonic
+ *   entry stays available.
  * - "Generate new seed" creates a fresh 12-word BIP-39 mnemonic and
  *   shows it in a card. The user must explicitly accept the seed
  *   (filling the seed field) before it can be used to unlock the
@@ -114,19 +123,6 @@ fun PassphraseScreen(
             )
 
             OutlinedTextField(
-                value = seed,
-                onValueChange = { seed = it },
-                label = { Text("Seed (BIP-39 mnemonic)") },
-                singleLine = false,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.None,
-                    keyboardType = KeyboardType.Text,
-                    autoCorrectEnabled = false,
-                ),
-                modifier = Modifier.fillMaxWidth(),
-            )
-
-            OutlinedTextField(
                 value = passphrase,
                 onValueChange = { passphrase = it },
                 label = { Text("Passphrase (optional)") },
@@ -134,6 +130,24 @@ fun PassphraseScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
+                ),
+                modifier = Modifier.fillMaxWidth(),
+            )
+
+            OutlinedTextField(
+                value = seed,
+                onValueChange = { seed = it },
+                label = { Text("Seed (BIP-39 mnemonic)") },
+                singleLine = false,
+                visualTransformation = if (seedFieldMasked(passphrase)) {
+                    PasswordVisualTransformation()
+                } else {
+                    VisualTransformation.None
+                },
+                keyboardOptions = KeyboardOptions(
+                    capitalization = KeyboardCapitalization.None,
+                    keyboardType = KeyboardType.Text,
+                    autoCorrectEnabled = false,
                 ),
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -267,3 +281,16 @@ private fun copyToClipboard(context: Context, text: String) {
     val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
     clipboard?.setPrimaryClip(ClipData.newPlainText("yubtc seed", text))
 }
+
+/**
+ * Seed-field masking rule, mirroring the CLI prompt (commit
+ * c4233d3): with an empty passphrase the seed is the only secret
+ * being typed, so the field hides the input; once a passphrase
+ * exists, the seed is displayed in plain text. The passphrase is
+ * compared raw — it is never trimmed (BIP-39 allows leading and
+ * trailing spaces), so only the truly empty string masks the seed.
+ *
+ * Extracted as a pure function so the JVM unit suite can pin the
+ * rule without instrumented Compose tests.
+ */
+internal fun seedFieldMasked(passphrase: String): Boolean = passphrase.isEmpty()
